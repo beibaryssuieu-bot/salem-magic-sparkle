@@ -103,10 +103,13 @@ function AuthPage() {
     });
     setLoading(false);
     if (error) {
+      const m = error.message.toLowerCase();
       toast.error(
-        error.message.toLowerCase().includes("registered")
+        m.includes("registered") || m.includes("already")
           ? "Бұл логин бұрын тіркелген"
-          : "Тіркелу сәтсіз аяқталды",
+          : m.includes("weak") || m.includes("pwned")
+            ? "Құпиясөз тым қарапайым — күрделірек құпиясөз таңдаңыз"
+            : `Тіркелу сәтсіз: ${error.message}`,
       );
       return;
     }
