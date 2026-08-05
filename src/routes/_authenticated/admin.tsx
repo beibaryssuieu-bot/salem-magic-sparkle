@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -16,21 +17,33 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useProfile, useSession } from "@/lib/auth";
-import { METRICS, formatPeriod, type ClassMetric, type MetricKey } from "@/lib/metrics";
+import { formatPeriod } from "@/lib/metrics";
+import {
+  CRITERIA,
+  GROUPS,
+  MAX_TOTAL,
+  criterionMax,
+  criterionPoints,
+  levelLabel,
+  percentOf,
+  totalPoints,
+  type ClassScoreRow,
+  type Scores,
+} from "@/lib/criteria";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
     meta: [
-      { title: "Көрсеткіштерді басқару — TÄRBIE OS" },
+      { title: "Балдық мониторингті енгізу — TÄRBIE OS" },
       {
         name: "description",
         content:
-          "Әкімшіге арналған бет: барлық сыныптардың айлық тәрбиелік көрсеткіштерін енгізу және жаңарту.",
+          "Әкімшіге арналған бет: сынып жетекшілерінің критерийлер бойынша айлық баллдарын енгізу.",
       },
-      { property: "og:title", content: "Көрсеткіштерді басқару — TÄRBIE OS" },
+      { property: "og:title", content: "Балдық мониторингті енгізу — TÄRBIE OS" },
       {
         property: "og:description",
-        content: "Барлық сыныптар бойынша айлық шкала деректерін бір жерден енгізіңіз.",
+        content: "Барлық сыныптар бойынша критерийлік балдарды бір жерден енгізіңіз.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -39,17 +52,9 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
-const emptyValues: Record<MetricKey, number> = {
-  discipline: 0,
-  attendance: 0,
-  reading: 0,
-  volunteering: 0,
-  psychology: 0,
-};
-
 function currentPeriod() {
   const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
 function AdminPage() {
@@ -58,8 +63,8 @@ function AdminPage() {
   const queryClient = useQueryClient();
 
   const [classId, setClassId] = useState("");
-  const [period, setPeriod] = useState(currentPeriod().slice(0, 7));
-  const [values, setValues] = useState<Record<MetricKey, number>>(emptyValues);
+  const [period, setPeriod] = useState(currentPeriod());
+  const [scores, setScores] = useState<Scores>({});
   const [note, setNote] = useState("");
   const [newClass, setNewClass] = useState("");
 
@@ -72,15 +77,18 @@ function AdminPage() {
     },
   });
 
-  const metricsQuery = useQuery({
-    queryKey: ["metrics"],
+  const scoresQuery = useQuery({
+    queryKey: ["class_scores"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("class_metrics")
+        .from("class_scores")
         .select("*")
         .order("period", { ascending: false });
       if (error) throw error;
-      return data as ClassMetric[];
+      return (data ?? []).map((r) => ({
+        ...r,
+        scores: (r.scores ?? {}) as Scores,
+      })) as ClassScoreRow[];
     },
   });
 
@@ -89,41 +97,32 @@ function AdminPage() {
   const periodDate = `${period}-01`;
 
   useEffect(() => {
-    const existing = (metricsQuery.data ?? []).find(
-      (m) => m.class_id === activeClassId && m.period === periodDate,
+    const existing = (scoresQuery.data ?? []).find(
+      (r) => r.class_id === activeClassId && r.period === periodDate,
     );
-    if (existing) {
-      setValues({
-        discipline: existing.discipline,
-        attendance: existing.attendance,
-        reading: existing.reading,
-        volunteering: existing.volunteering,
-        psychology: existing.psychology,
-      });
-      setNote(existing.note ?? "");
-    } else {
-      setValues(emptyValues);
-      setNote("");
-    }
-  }, [activeClassId, periodDate, metricsQuery.data]);
+    setScores(existing?.scores ?? {});
+    setNote(existing?.note ?? "");
+  }, [activeClassId, periodDate, scoresQuery.data]);
+
+  const total = totalPoints(scores);
+  const percent = percentOf(total);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("class_metrics").upsert(
+      const { error } = await supabase.from("class_scores").upsert(
         {
           class_id: activeClassId,
           period: periodDate,
-          ...values,
+          scores,
           note: note.trim() || null,
-          updated_at: new Date().toISOString(),
         },
         { onConflict: "class_id,period" },
       );
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Көрсеткіштер сақталды");
-      queryClient.invalidateQueries({ queryKey: ["metrics"] });
+      toast.success("Баллдар сақталды");
+      queryClient.invalidateQueries({ queryKey: ["class_scores"] });
     },
     onError: () => toast.error("Сақтау сәтсіз аяқталды"),
   });
@@ -169,84 +168,145 @@ function AdminPage() {
   return (
     <div className="min-h-screen bg-background">
       <AppHeader />
-      <main className="mx-auto w-full max-w-5xl px-4 py-10">
-        <h1 className="font-display text-2xl font-bold md:text-3xl">Көрсеткіштерді енгізу</h1>
+      <main className="mx-auto w-full max-w-6xl px-4 py-10">
+        <h1 className="font-display text-2xl font-bold md:text-3xl">Балдық мониторингті енгізу</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Сынып пен айды таңдап, 0–100 аралығындағы мәндерді енгізіңіз.
+          Сынып пен айды таңдап, әр критерий бойынша нәтижені белгілеңіз.
         </p>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[2fr_1fr]">
-          <section className="rounded-2xl border border-border bg-card p-6">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Сынып</Label>
-                <Select value={activeClassId} onValueChange={setClassId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Сынып таңдаңыз" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {classes.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name} сынып
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="period">Ай</Label>
-                <Input
-                  id="period"
-                  type="month"
-                  value={period}
-                  onChange={(e) => setPeriod(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="mt-6 space-y-4">
-              {METRICS.map((m) => (
-                <div key={m.key} className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <Label htmlFor={m.key}>{m.label}</Label>
-                    <span className="font-semibold">{values[m.key]}%</span>
-                  </div>
+          <section className="space-y-6">
+            <div className="rounded-2xl border border-border bg-card p-6">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Сынып</Label>
+                  <Select value={activeClassId} onValueChange={setClassId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Сынып таңдаңыз" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {classes.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name} сынып
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="period">Ай</Label>
                   <Input
-                    id={m.key}
-                    type="range"
-                    min={0}
-                    max={100}
-                    value={values[m.key]}
-                    onChange={(e) =>
-                      setValues((v) => ({ ...v, [m.key]: Number(e.target.value) }))
-                    }
-                    className="h-2 cursor-pointer p-0 accent-[var(--color-primary)]"
+                    id="period"
+                    type="month"
+                    value={period}
+                    onChange={(e) => setPeriod(e.target.value)}
                   />
                 </div>
-              ))}
+              </div>
             </div>
 
-            <div className="mt-6 space-y-2">
+            {GROUPS.map((g) => (
+              <div key={g} className="rounded-2xl border border-border bg-card p-6">
+                <h2 className="font-display font-bold">{g}</h2>
+                <div className="mt-4 space-y-4">
+                  {CRITERIA.filter((c) => c.group === g).map((c) => {
+                    const pts = criterionPoints(c, scores[c.key]);
+                    return (
+                      <div
+                        key={c.key}
+                        className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-3 last:border-0 last:pb-0"
+                      >
+                        <div className="min-w-[220px] flex-1">
+                          <p className="text-sm">{c.label}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Макс. {criterionMax(c)} балл
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {c.type === "tier" && (
+                            <Select
+                              value={String(scores[c.key] ?? 0)}
+                              onValueChange={(v) =>
+                                setScores((s) => ({ ...s, [c.key]: Number(v) }))
+                              }
+                            >
+                              <SelectTrigger className="w-48">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {c.tiers.map((t, i) => (
+                                  <SelectItem key={t.label} value={String(i)}>
+                                    {t.label} ({t.points} балл)
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                          {c.type === "fixed" && (
+                            <Checkbox
+                              checked={Boolean(scores[c.key])}
+                              onCheckedChange={(v) =>
+                                setScores((s) => ({ ...s, [c.key]: v ? 1 : 0 }))
+                              }
+                            />
+                          )}
+                          {c.type === "count" && (
+                            <Input
+                              type="number"
+                              min={0}
+                              max={c.maxUnits}
+                              className="w-24"
+                              value={scores[c.key] ?? 0}
+                              onChange={(e) =>
+                                setScores((s) => ({
+                                  ...s,
+                                  [c.key]: Math.max(
+                                    0,
+                                    Math.min(c.maxUnits, Number(e.target.value) || 0),
+                                  ),
+                                }))
+                              }
+                            />
+                          )}
+                          <span className="w-20 text-right text-sm font-semibold">{pts} балл</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+
+            <div className="rounded-2xl border border-border bg-card p-6">
               <Label htmlFor="note">Түсініктеме</Label>
               <Textarea
                 id="note"
+                className="mt-2"
                 value={note}
                 maxLength={500}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="Қосымша ескертпе (міндетті емес)"
               />
+              <Button
+                className="mt-4 w-full"
+                onClick={() => saveMutation.mutate()}
+                disabled={!activeClassId || saveMutation.isPending}
+              >
+                Сақтау
+              </Button>
             </div>
-
-            <Button
-              className="mt-6 w-full"
-              onClick={() => saveMutation.mutate()}
-              disabled={!activeClassId || saveMutation.isPending}
-            >
-              Сақтау
-            </Button>
           </section>
 
-          <aside className="space-y-6">
+          <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
+            <div className="rounded-2xl panel-dark p-6">
+              <h2 className="font-display font-bold">Ағымдағы нәтиже</h2>
+              <p className="mt-3 font-display text-4xl font-bold">{total} балл</p>
+              <p className="text-sm opacity-80">
+                {MAX_TOTAL} баллдан · {percent}%
+              </p>
+              <p className="mt-1 text-sm opacity-80">{levelLabel(percent)}</p>
+            </div>
+
             <div className="rounded-2xl border border-border bg-card p-6">
               <h2 className="font-display font-bold">Жаңа сынып</h2>
               <div className="mt-3 flex gap-2">
@@ -269,10 +329,12 @@ function AdminPage() {
             <div className="rounded-2xl border border-border bg-card p-6">
               <h2 className="font-display font-bold">Соңғы жазбалар</h2>
               <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-                {(metricsQuery.data ?? []).slice(0, 8).map((m) => (
-                  <li key={m.id} className="flex justify-between">
-                    <span>{classes.find((c) => c.id === m.class_id)?.name ?? "—"}</span>
-                    <span>{formatPeriod(m.period)}</span>
+                {(scoresQuery.data ?? []).slice(0, 8).map((r) => (
+                  <li key={r.id} className="flex justify-between">
+                    <span>{classes.find((c) => c.id === r.class_id)?.name ?? "—"}</span>
+                    <span>
+                      {formatPeriod(r.period)} · {totalPoints(r.scores)} балл
+                    </span>
                   </li>
                 ))}
               </ul>
