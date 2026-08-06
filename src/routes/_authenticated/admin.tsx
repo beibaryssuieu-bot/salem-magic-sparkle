@@ -337,7 +337,7 @@ function AdminPage() {
             </div>
           </aside>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
