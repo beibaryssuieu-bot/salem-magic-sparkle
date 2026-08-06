@@ -3,7 +3,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -144,8 +143,7 @@ function AdminPage() {
 
   if (profileLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <AppHeader />
+      <div>
         <p className="p-10 text-center text-muted-foreground">Жүктелуде…</p>
       </div>
     );
@@ -153,8 +151,7 @@ function AdminPage() {
 
   if (!me?.isAdmin) {
     return (
-      <div className="min-h-screen bg-background">
-        <AppHeader />
+      <div>
         <div className="mx-auto max-w-lg px-4 py-20 text-center">
           <h1 className="font-display text-xl font-bold">Рұқсат жоқ</h1>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -166,8 +163,7 @@ function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <AppHeader />
+    <div>
       <main className="mx-auto w-full max-w-6xl px-4 py-10">
         <h1 className="font-display text-2xl font-bold md:text-3xl">Балдық мониторингті енгізу</h1>
         <p className="mt-2 text-sm text-muted-foreground">
