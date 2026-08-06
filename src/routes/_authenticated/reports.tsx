@@ -134,7 +134,10 @@ function ReportsPage() {
     const { data, error } = await supabase.storage
       .from("reports")
       .createSignedUrl(row.file_path, 60, { download: row.file_name });
-    if (error || !data) return toast.error("Файлды ашу мүмкін болмады");
+    if (error || !data) {
+      toast.error("Файлды ашу мүмкін болмады");
+      return;
+    }
     window.open(data.signedUrl, "_blank");
   }
 
