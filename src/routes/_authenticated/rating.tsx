@@ -20,7 +20,7 @@ import {
 import {
   PERIOD_KIND_LABELS,
   academicYearOptions,
-  currentAcademicYear,
+  DEFAULT_ACADEMIC_START_YEAR,
   periodOptions,
   type PeriodKind,
 } from "@/lib/periods";
@@ -48,7 +48,7 @@ export const Route = createFileRoute("/_authenticated/rating")({
 
 function RatingPage() {
   const [kind, setKind] = useState<PeriodKind>("month");
-  const [year, setYear] = useState(String(currentAcademicYear()));
+  const [year, setYear] = useState(String(DEFAULT_ACADEMIC_START_YEAR));
   const [selection, setSelection] = useState("");
 
   const classesQuery = useQuery({

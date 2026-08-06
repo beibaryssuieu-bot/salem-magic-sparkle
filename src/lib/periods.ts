@@ -26,11 +26,19 @@ export function currentAcademicYear(date = new Date()) {
   return date.getMonth() + 1 >= 9 ? date.getFullYear() : date.getFullYear() - 1;
 }
 
-export function academicYearOptions(count = 4, from = currentAcademicYear()) {
-  return Array.from({ length: count }, (_, i) => from - i).map((y) => ({
+/** Негізгі оқу жылы — 2026–2027 */
+export const DEFAULT_ACADEMIC_START_YEAR = 2026;
+
+export function academicYearOptions(count = 4, toYear = currentAcademicYear() + 1) {
+  return Array.from({ length: count }, (_, i) => toYear - i).map((y) => ({
     value: String(y),
     label: `${y}–${y + 1} оқу жылы`,
   }));
+}
+
+/** Оқу жылындағы барлық айлар (YYYY-MM-01) */
+export function academicYearPeriodList(startYear: number): string[] {
+  return ACADEMIC_MONTHS.map((m) => periodDate(startYear, m));
 }
 
 const QUARTERS: { label: string; months: number[] }[] = [

@@ -15,6 +15,11 @@ import {
 import { useProfile, useSession } from "@/lib/auth";
 import { formatPeriod } from "@/lib/metrics";
 import {
+  DEFAULT_ACADEMIC_START_YEAR,
+  academicYearOptions,
+  academicYearPeriodList,
+} from "@/lib/periods";
+import {
   CRITERIA,
   GROUPS,
   MAX_TOTAL,
@@ -52,6 +57,7 @@ function Dashboard() {
   const { user } = useSession();
   const { data: me } = useProfile(user);
   const [classId, setClassId] = useState<string>("");
+  const [year, setYear] = useState(String(DEFAULT_ACADEMIC_START_YEAR));
   const [period, setPeriod] = useState<string>("");
 
   const classesQuery = useQuery({
@@ -86,9 +92,18 @@ function Dashboard() {
 
   const activeClassId = classId || myClassId;
   const classRows = (scoresQuery.data ?? []).filter((r) => r.class_id === activeClassId);
-  const activePeriod = period || classRows[0]?.period || "";
+
+  const allPeriods = useMemo(
+    () => academicYearPeriodList(Number(year)),
+    [year],
+  );
+
+  const activePeriod = period || allPeriods[0] || "";
   const current = classRows.find((r) => r.period === activePeriod);
-  const previous = classRows.find((r) => r.period < activePeriod);
+  const periodIndex = allPeriods.indexOf(activePeriod);
+  const previous = periodIndex > 0
+    ? classRows.find((r) => r.period === allPeriods[periodIndex - 1])
+    : undefined;
   const activeClass = classes.find((c) => c.id === activeClassId);
 
   const total = current ? totalPoints(current.scores) : 0;
@@ -131,14 +146,33 @@ function Dashboard() {
               </SelectContent>
             </Select>
 
+            <Select
+              value={year}
+              onValueChange={(v) => {
+                setYear(v);
+                setPeriod("");
+              }}
+            >
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {academicYearOptions().map((y) => (
+                  <SelectItem key={y.value} value={y.value}>
+                    {y.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
             <Select value={activePeriod} onValueChange={setPeriod}>
               <SelectTrigger className="w-44">
                 <SelectValue placeholder="Кезең" />
               </SelectTrigger>
               <SelectContent>
-                {classRows.map((r) => (
-                  <SelectItem key={r.id} value={r.period}>
-                    {formatPeriod(r.period)}
+                {allPeriods.map((p) => (
+                  <SelectItem key={p} value={p}>
+                    {formatPeriod(p)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -154,7 +188,9 @@ function Dashboard() {
 
         {!current ? (
           <div className="mt-10 rounded-2xl border border-dashed border-border p-10 text-center text-muted-foreground">
-            Бұл сынып бойынша әзірге балл енгізілмеген.
+            {activePeriod
+              ? `${formatPeriod(activePeriod)} бойынша дерек енгізілмеген.`
+              : "Бұл сынып бойынша әзірге балл енгізілмеген."}
           </div>
         ) : (
           <>
