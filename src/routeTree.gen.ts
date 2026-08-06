@@ -17,6 +17,7 @@ import { Route as AuthenticatedAttendanceRouteImport } from './routes/_authentic
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedEduqorRouteImport } from './routes/_authenticated/eduqor'
 import { Route as AuthenticatedEventsRouteImport } from './routes/_authenticated/events'
+import { Route as AuthenticatedRatingRouteImport } from './routes/_authenticated/rating'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 
 const IndexRoute = IndexRouteImport.update({
@@ -58,6 +59,11 @@ const AuthenticatedEventsRoute = AuthenticatedEventsRouteImport.update({
   path: '/events',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedRatingRoute = AuthenticatedRatingRouteImport.update({
+  id: '/rating',
+  path: '/rating',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
@@ -72,6 +78,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/eduqor': typeof AuthenticatedEduqorRoute
   '/events': typeof AuthenticatedEventsRoute
+  '/rating': typeof AuthenticatedRatingRoute
   '/reports': typeof AuthenticatedReportsRoute
 }
 export interface FileRoutesByTo {
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/eduqor': typeof AuthenticatedEduqorRoute
   '/events': typeof AuthenticatedEventsRoute
+  '/rating': typeof AuthenticatedRatingRoute
   '/reports': typeof AuthenticatedReportsRoute
 }
 export interface FileRoutesById {
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/eduqor': typeof AuthenticatedEduqorRoute
   '/_authenticated/events': typeof AuthenticatedEventsRoute
+  '/_authenticated/rating': typeof AuthenticatedRatingRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
 }
 export interface FileRouteTypes {
@@ -106,6 +115,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/eduqor'
     | '/events'
+    | '/rating'
     | '/reports'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/eduqor'
     | '/events'
+    | '/rating'
     | '/reports'
   id:
     | '__root__'
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/eduqor'
     | '/_authenticated/events'
+    | '/_authenticated/rating'
     | '/_authenticated/reports'
   fileRoutesById: FileRoutesById
 }
@@ -194,6 +206,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEventsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/rating': {
+      id: '/_authenticated/rating'
+      path: '/rating'
+      fullPath: '/rating'
+      preLoaderRoute: typeof AuthenticatedRatingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/reports': {
       id: '/_authenticated/reports'
       path: '/reports'
@@ -210,6 +229,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEduqorRoute: typeof AuthenticatedEduqorRoute
   AuthenticatedEventsRoute: typeof AuthenticatedEventsRoute
+  AuthenticatedRatingRoute: typeof AuthenticatedRatingRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
 }
 
@@ -219,6 +239,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEduqorRoute: AuthenticatedEduqorRoute,
   AuthenticatedEventsRoute: AuthenticatedEventsRoute,
+  AuthenticatedRatingRoute: AuthenticatedRatingRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
 }
 
