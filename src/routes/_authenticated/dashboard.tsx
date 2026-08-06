@@ -106,7 +106,7 @@ function Dashboard() {
 
   return (
     <div>
-      <main className="mx-auto w-full max-w-7xl px-4 py-10">
+      <div className="mx-auto w-full max-w-7xl px-4 py-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-sm text-muted-foreground">
