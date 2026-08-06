@@ -3,7 +3,6 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { AppHeader } from "@/components/app-header";
 import { MetricRing } from "@/components/metric-ring";
 import { Button } from "@/components/ui/button";
 import {
@@ -106,9 +105,8 @@ function Dashboard() {
     .slice(0, 5);
 
   return (
-    <div className="min-h-screen bg-background">
-      <AppHeader />
-      <main className="mx-auto w-full max-w-7xl px-4 py-10">
+    <div>
+      <div className="mx-auto w-full max-w-7xl px-4 py-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-sm text-muted-foreground">
@@ -284,7 +282,7 @@ function Dashboard() {
             )}
           </>
         )}
-      </main>
+      </div>
     </div>
   );
 }

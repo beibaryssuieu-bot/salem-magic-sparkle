@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      attendance: {
+        Row: {
+          class_id: string
+          comment: string | null
+          created_at: string
+          day: string
+          id: string
+          present_students: number
+          total_students: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          class_id: string
+          comment?: string | null
+          created_at?: string
+          day: string
+          id?: string
+          present_students?: number
+          total_students?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          class_id?: string
+          comment?: string | null
+          created_at?: string
+          day?: string
+          id?: string
+          present_students?: number
+          total_students?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       class_metrics: {
         Row: {
           attendance: number
@@ -117,6 +161,42 @@ export type Database = {
         }
         Relationships: []
       }
+      eduqor_docs: {
+        Row: {
+          created_at: string
+          description: string | null
+          file_name: string
+          file_path: string
+          file_type: string | null
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          file_name: string
+          file_path: string
+          file_type?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          file_name?: string
+          file_path?: string
+          file_type?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           created_at: string
@@ -164,6 +244,53 @@ export type Database = {
           username?: string
         }
         Relationships: []
+      }
+      reports: {
+        Row: {
+          class_id: string | null
+          comment: string | null
+          created_at: string
+          file_name: string
+          file_path: string
+          file_type: string | null
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          class_id?: string | null
+          comment?: string | null
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_type?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          class_id?: string | null
+          comment?: string | null
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_type?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
