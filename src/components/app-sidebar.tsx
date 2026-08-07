@@ -92,6 +92,18 @@ export function AppSidebar() {
                       <span>Басқару</span>
                     </Link>
                   </SidebarMenuButton>
+                  {!collapsed && (
+                    <SidebarMenuSub>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton
+                          asChild
+                          isActive={pathname === "/class-criteria"}
+                        >
+                          <Link to="/class-criteria">Сынып критерийлері</Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    </SidebarMenuSub>
+                  )}
                 </SidebarMenuItem>
               )}
             </SidebarMenu>
