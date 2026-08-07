@@ -277,6 +277,71 @@ function AdminAttendanceView() {
           </div>
         )}
       </section>
+        </>
+      ) : (
+        <>
+          <div className="mt-6 space-y-1">
+            <Label htmlFor="att-month">Ай</Label>
+            <Input
+              id="att-month"
+              type="month"
+              value={month}
+              onChange={(e) => setMonth(e.target.value)}
+              className="w-44"
+            />
+          </div>
+
+          {monthAvg !== null && (
+            <p className="mt-4 rounded-xl border border-border bg-secondary/40 px-4 py-3 text-sm">
+              Ай бойынша орташа қатысу:{" "}
+              <span className="font-semibold">{monthAvg}%</span>
+            </p>
+          )}
+
+          <section className="mt-6 rounded-2xl border border-border bg-card p-6">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-muted-foreground">
+                    <th className="py-2 font-medium">Сынып</th>
+                    <th className="py-2 text-right font-medium">Күндер</th>
+                    <th className="py-2 text-right font-medium">Келгені</th>
+                    <th className="py-2 text-right font-medium">Орташа %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {monthRows.map((r) => (
+                    <tr key={r.classId} className="border-t border-border/60">
+                      <td className="py-2.5 pr-3 font-medium">{r.name} сынып</td>
+                      <td className="py-2.5 text-right">{r.days}</td>
+                      <td className="py-2.5 text-right">
+                        {r.total > 0 ? `${r.present}/${r.total}` : "—"}
+                      </td>
+                      <td className="py-2.5 text-right">
+                        {r.percent !== null ? (
+                          <span
+                            className={
+                              r.percent >= 90
+                                ? "font-semibold text-primary"
+                                : r.percent >= 75
+                                  ? "font-semibold"
+                                  : "font-semibold text-destructive"
+                            }
+                          >
+                            {r.percent}%
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </>
+      )}
     </>
   );
 }
