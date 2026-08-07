@@ -182,22 +182,48 @@ function AdminAttendanceView() {
       ? Math.round(withData.reduce((s, r) => s + (r.percent ?? 0), 0) / withData.length)
       : null;
 
+  const monthAvg = (() => {
+    const withRows = monthRows.filter((r) => r.total > 0);
+    if (withRows.length === 0) return null;
+    return Math.round(withRows.reduce((s, r) => s + (r.percent ?? 0), 0) / withRows.length);
+  })();
+
   return (
     <>
       <p className="mt-2 text-sm text-muted-foreground">
-        Барлық сыныптардың күндік қатысу деректерін литер бойынша бақылаңыз.
+        Барлық сыныптардың қатысу деректерін күн және ай бойынша бақылаңыз.
       </p>
 
-      <div className="mt-6">
-        <DayPicker day={day} onChange={setDay} />
+      <div className="mt-6 inline-flex rounded-xl border border-border bg-card p-1">
+        <Button
+          variant={mode === "day" ? "default" : "ghost"}
+          size="sm"
+          onClick={() => setMode("day")}
+        >
+          Күндік
+        </Button>
+        <Button
+          variant={mode === "month" ? "default" : "ghost"}
+          size="sm"
+          onClick={() => setMode("month")}
+        >
+          Айлық
+        </Button>
       </div>
 
-      {avgPercent !== null && (
-        <p className="mt-4 rounded-xl border border-border bg-secondary/40 px-4 py-3 text-sm">
-          Орташа қатысу: <span className="font-semibold">{avgPercent}%</span> ·{" "}
-          {withData.length} сынып дерек енгізген
-        </p>
-      )}
+      {mode === "day" ? (
+        <>
+          <div className="mt-6">
+            <DayPicker day={day} onChange={setDay} />
+          </div>
+
+          {avgPercent !== null && (
+            <p className="mt-4 rounded-xl border border-border bg-secondary/40 px-4 py-3 text-sm">
+              Орташа қатысу: <span className="font-semibold">{avgPercent}%</span> ·{" "}
+              {withData.length} сынып дерек енгізген
+            </p>
+          )}
+
 
       <section className="mt-6 rounded-2xl border border-border bg-card p-6">
         {classes.length === 0 ? (
