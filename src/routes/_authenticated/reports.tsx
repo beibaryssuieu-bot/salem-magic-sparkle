@@ -73,8 +73,7 @@ function ReportsPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("reports")
-        .select("id, user_id, class_id, title, comment, file_path, file_name, created_at")
-        .order("created_at", { ascending: false });
+        .select("id, user_id, class_id, title, comment, file_path, file_name, created_at");
       if (error) throw error;
       return (data ?? []) as ReportRow[];
     },
