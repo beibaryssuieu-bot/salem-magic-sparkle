@@ -87,7 +87,8 @@ function DayPicker({ day, onChange }: { day: string; onChange: (d: string) => vo
 }
 
 function monthBounds(month: string) {
-  const [y, m] = month.split("-").map(Number);
+  const y = Number(month.slice(0, 4));
+  const m = Number(month.slice(5, 7));
   const start = `${month}-01`;
   const endDate = new Date(y, m, 0);
   const end = `${month}-${String(endDate.getDate()).padStart(2, "0")}`;
