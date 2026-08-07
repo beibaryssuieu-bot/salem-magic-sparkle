@@ -86,8 +86,18 @@ function DayPicker({ day, onChange }: { day: string; onChange: (d: string) => vo
   );
 }
 
+function monthBounds(month: string) {
+  const [y, m] = month.split("-").map(Number);
+  const start = `${month}-01`;
+  const endDate = new Date(y, m, 0);
+  const end = `${month}-${String(endDate.getDate()).padStart(2, "0")}`;
+  return { start, end };
+}
+
 function AdminAttendanceView() {
+  const [mode, setMode] = useState<"day" | "month">("day");
   const [day, setDay] = useState(new Date().toISOString().slice(0, 10));
+  const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
 
   const classesQuery = useQuery({
     queryKey: ["classes"],
@@ -110,10 +120,47 @@ function AdminAttendanceView() {
     },
   });
 
+  const monthQuery = useQuery({
+    queryKey: ["attendance-month", month],
+    enabled: mode === "month",
+    queryFn: async () => {
+      const { start, end } = monthBounds(month);
+      const { data, error } = await supabase
+        .from("attendance")
+        .select("id, class_id, day, total_students, present_students, comment")
+        .gte("day", start)
+        .lte("day", end);
+      if (error) throw error;
+      return (data ?? []) as AttendanceRow[];
+    },
+  });
+
   const classes = useMemo(
     () => sortClassesByLiter(classesQuery.data ?? []),
     [classesQuery.data],
   );
+
+  const monthRows = useMemo(() => {
+    const byClass = new Map<string, AttendanceRow[]>();
+    for (const r of monthQuery.data ?? []) {
+      const list = byClass.get(r.class_id) ?? [];
+      list.push(r);
+      byClass.set(r.class_id, list);
+    }
+    return classes.map((c) => {
+      const list = byClass.get(c.id) ?? [];
+      const total = list.reduce((s2, r) => s2 + r.total_students, 0);
+      const present = list.reduce((s2, r) => s2 + r.present_students, 0);
+      return {
+        classId: c.id,
+        name: c.name,
+        days: list.length,
+        total,
+        present,
+        percent: total > 0 ? Math.round((present / total) * 100) : null,
+      };
+    });
+  }, [monthQuery.data, classes]);
 
   const byClass = useMemo(() => {
     const map = new Map<string, AttendanceRow>();
