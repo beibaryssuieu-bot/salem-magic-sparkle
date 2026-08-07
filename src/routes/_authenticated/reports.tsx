@@ -140,8 +140,10 @@ function ReportsPage() {
     window.open(data.signedUrl, "_blank");
   }
 
-  const classes = classesQuery.data ?? [];
-  const rows = reportsQuery.data ?? [];
+  const classes = sortClassesByLiter(classesQuery.data ?? []);
+  const allRows = reportsQuery.data ?? [];
+  const rows =
+    filterClassId === "all" ? allRows : allRows.filter((r) => r.class_id === filterClassId);
 
   function authorName(id: string) {
     const p = authorsQuery.data?.find((a) => a.id === id);
