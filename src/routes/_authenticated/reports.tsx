@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useProfile, useSession } from "@/lib/auth";
+import { sortClassesByLiter } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({
@@ -58,6 +59,7 @@ function ReportsPage() {
   const [comment, setComment] = useState("");
   const [classId, setClassId] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [filterClassId, setFilterClassId] = useState("all");
 
   const classesQuery = useQuery({
     queryKey: ["classes"],
