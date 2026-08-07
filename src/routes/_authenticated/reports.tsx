@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useProfile, useSession } from "@/lib/auth";
+import { sortClassesByLiter } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({
@@ -58,6 +59,7 @@ function ReportsPage() {
   const [comment, setComment] = useState("");
   const [classId, setClassId] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [filterClassId, setFilterClassId] = useState("all");
 
   const classesQuery = useQuery({
     queryKey: ["classes"],
@@ -73,8 +75,7 @@ function ReportsPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("reports")
-        .select("id, user_id, class_id, title, comment, file_path, file_name, created_at")
-        .order("created_at", { ascending: false });
+        .select("id, user_id, class_id, title, comment, file_path, file_name, created_at");
       if (error) throw error;
       return (data ?? []) as ReportRow[];
     },
@@ -141,8 +142,10 @@ function ReportsPage() {
     window.open(data.signedUrl, "_blank");
   }
 
-  const classes = classesQuery.data ?? [];
-  const rows = reportsQuery.data ?? [];
+  const classes = sortClassesByLiter(classesQuery.data ?? []);
+  const allRows = reportsQuery.data ?? [];
+  const rows =
+    filterClassId === "all" ? allRows : allRows.filter((r) => r.class_id === filterClassId);
 
   function authorName(id: string) {
     const p = authorsQuery.data?.find((a) => a.id === id);
@@ -215,6 +218,27 @@ function ReportsPage() {
 
         <section className="rounded-2xl border border-border bg-card p-6">
           <h2 className="font-display font-bold">Жүктелген есептер</h2>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button
+              variant={filterClassId === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilterClassId("all")}
+            >
+              Барлығы
+            </Button>
+            {classes.map((c) => (
+              <Button
+                key={c.id}
+                variant={filterClassId === c.id ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilterClassId(c.id)}
+              >
+                {c.name}
+              </Button>
+            ))}
+          </div>
+
           {rows.length === 0 ? (
             <p className="mt-4 text-sm text-muted-foreground">Әзірге есеп жоқ.</p>
           ) : (

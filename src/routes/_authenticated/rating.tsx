@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Trophy, TrendingDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -18,6 +19,13 @@ import {
   type ClassScoreRow,
 } from "@/lib/criteria";
 import {
+  CLASS_MAX_TOTAL,
+  classPercentOf,
+  classTotalPoints,
+  type ClassQualityRow,
+  type ClassScores,
+} from "@/lib/class-criteria";
+import {
   PERIOD_KIND_LABELS,
   academicYearOptions,
   DEFAULT_ACADEMIC_START_YEAR,
@@ -28,16 +36,16 @@ import {
 export const Route = createFileRoute("/_authenticated/rating")({
   head: () => ({
     meta: [
-      { title: "Сыныптар рейтингі — TÄRBIE OS" },
+      { title: "Рейтинг — TÄRBIE OS" },
       {
         name: "description",
         content:
-          "Қыркүйектен мамырға дейінгі айлық, тоқсандық, жартыжылдық және жылдық мониторинг бойынша сыныптар рейтингі.",
+          "Үздік сынып жетекші және үздік сынып рейтингтері: айлық, тоқсандық, жартыжылдық және жылдық мониторинг.",
       },
-      { property: "og:title", content: "Сыныптар рейтингі — TÄRBIE OS" },
+      { property: "og:title", content: "Рейтинг — TÄRBIE OS" },
       {
         property: "og:description",
-        content: "Үздік және назар аударуды қажет ететін сыныптардың балдық рейтингі.",
+        content: "Екі тәуелсіз рейтинг: сынып жетекшілер және сыныптар бойынша.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -46,7 +54,18 @@ export const Route = createFileRoute("/_authenticated/rating")({
   component: RatingPage,
 });
 
+type RatingRow = {
+  id: string;
+  name: string;
+  months: number;
+  points: number;
+  percent: number;
+};
+
+type Tab = "teacher" | "class";
+
 function RatingPage() {
+  const [tab, setTab] = useState<Tab>("teacher");
   const [kind, setKind] = useState<PeriodKind>("month");
   const [year, setYear] = useState(String(DEFAULT_ACADEMIC_START_YEAR));
   const [selection, setSelection] = useState("");
@@ -72,13 +91,49 @@ function RatingPage() {
     },
   });
 
+  const qualityQuery = useQuery({
+    queryKey: ["class_quality"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("class_quality")
+        .select("id, class_id, period, scores, note");
+      if (error) throw error;
+      return (data ?? []).map((r) => ({
+        ...r,
+        scores: (r.scores ?? {}) as ClassScores,
+      })) as ClassQualityRow[];
+    },
+  });
+
   const options = useMemo(() => periodOptions(kind, Number(year)), [kind, year]);
   const active = options.find((o) => o.value === selection) ?? options[0];
 
-  const rating = useMemo(() => {
+  const rating = useMemo<RatingRow[]>(() => {
     const classes = classesQuery.data ?? [];
-    const rows = scoresQuery.data ?? [];
     const periods = new Set(active?.periods ?? []);
+
+    if (tab === "class") {
+      const rows = qualityQuery.data ?? [];
+      return classes
+        .map((c) => {
+          const mine = rows.filter((r) => r.class_id === c.id && periods.has(r.period));
+          const points = Math.round(
+            mine.reduce((s, r) => s + classTotalPoints(r.scores), 0) * 10,
+          ) / 10;
+          const max = CLASS_MAX_TOTAL * Math.max(1, mine.length);
+          return {
+            id: c.id,
+            name: c.name,
+            months: mine.length,
+            points,
+            percent: mine.length ? classPercentOf(points, max) : 0,
+          };
+        })
+        .filter((r) => r.months > 0)
+        .sort((a, b) => b.points - a.points);
+    }
+
+    const rows = scoresQuery.data ?? [];
     return classes
       .map((c) => {
         const mine = rows.filter((r) => r.class_id === c.id && periods.has(r.period));
@@ -94,17 +149,37 @@ function RatingPage() {
       })
       .filter((r) => r.months > 0)
       .sort((a, b) => b.points - a.points);
-  }, [classesQuery.data, scoresQuery.data, active]);
+  }, [tab, classesQuery.data, scoresQuery.data, qualityQuery.data, active]);
 
   const best = rating.slice(0, 3);
   const worst = [...rating].reverse().slice(0, 3);
 
+  const isTeacher = tab === "teacher";
+
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8">
-      <h1 className="font-display text-2xl font-bold md:text-3xl">Сыныптар рейтингі</h1>
+      <h1 className="font-display text-2xl font-bold md:text-3xl">Рейтинг</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Мониторинг қыркүйектен мамырға дейін: айлық, тоқсандық, жартыжылдық және жылдық қорытынды.
+        Екі тәуелсіз мониторинг: сынып жетекшілер жұмысы және сыныптардың күнделікті
+        көрсеткіштері. Кезең — қыркүйектен мамырға дейін.
       </p>
+
+      <div className="mt-6 inline-flex rounded-xl border border-border bg-card p-1">
+        <Button
+          variant={isTeacher ? "default" : "ghost"}
+          size="sm"
+          onClick={() => setTab("teacher")}
+        >
+          Үздік сынып жетекші
+        </Button>
+        <Button
+          variant={!isTeacher ? "default" : "ghost"}
+          size="sm"
+          onClick={() => setTab("class")}
+        >
+          Үздік сынып
+        </Button>
+      </div>
 
       <div className="mt-6 flex flex-wrap gap-2">
         <Select
@@ -168,7 +243,8 @@ function RatingPage() {
           <div className="mt-8 grid gap-5 md:grid-cols-2">
             <section className="rounded-2xl panel-dark p-6">
               <h2 className="flex items-center gap-2 font-display font-bold">
-                <Trophy className="size-4" /> Үздік сыныптар
+                <Trophy className="size-4" />{" "}
+                {isTeacher ? "Үздік сынып жетекшілер" : "Үздік сыныптар"}
               </h2>
               <ul className="mt-4 space-y-2 text-sm">
                 {best.map((r, i) => (
@@ -202,7 +278,9 @@ function RatingPage() {
           </div>
 
           <section className="mt-6 rounded-2xl border border-border bg-card p-6">
-            <h2 className="font-display font-bold">Толық рейтинг — {active?.label}</h2>
+            <h2 className="font-display font-bold">
+              {isTeacher ? "Үздік сынып жетекші" : "Үздік сынып"} — {active?.label}
+            </h2>
             <div className="mt-4 overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>

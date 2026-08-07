@@ -24,6 +24,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useProfile, useSession } from "@/lib/auth";
@@ -92,6 +95,18 @@ export function AppSidebar() {
                       <span>Басқару</span>
                     </Link>
                   </SidebarMenuButton>
+                  {!collapsed && (
+                    <SidebarMenuSub>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton
+                          asChild
+                          isActive={pathname === "/class-criteria"}
+                        >
+                          <Link to="/class-criteria">Сынып критерийлері</Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    </SidebarMenuSub>
+                  )}
                 </SidebarMenuItem>
               )}
             </SidebarMenu>

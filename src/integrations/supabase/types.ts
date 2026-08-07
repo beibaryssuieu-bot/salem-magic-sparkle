@@ -105,6 +105,44 @@ export type Database = {
           },
         ]
       }
+      class_quality: {
+        Row: {
+          class_id: string
+          created_at: string
+          id: string
+          note: string | null
+          period: string
+          scores: Json
+          updated_at: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          period: string
+          scores?: Json
+          updated_at?: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          period?: string
+          scores?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_quality_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       class_scores: {
         Row: {
           class_id: string

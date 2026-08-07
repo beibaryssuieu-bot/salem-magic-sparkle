@@ -86,8 +86,19 @@ function DayPicker({ day, onChange }: { day: string; onChange: (d: string) => vo
   );
 }
 
+function monthBounds(month: string) {
+  const y = Number(month.slice(0, 4));
+  const m = Number(month.slice(5, 7));
+  const start = `${month}-01`;
+  const endDate = new Date(y, m, 0);
+  const end = `${month}-${String(endDate.getDate()).padStart(2, "0")}`;
+  return { start, end };
+}
+
 function AdminAttendanceView() {
+  const [mode, setMode] = useState<"day" | "month">("day");
   const [day, setDay] = useState(new Date().toISOString().slice(0, 10));
+  const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
 
   const classesQuery = useQuery({
     queryKey: ["classes"],
@@ -110,10 +121,47 @@ function AdminAttendanceView() {
     },
   });
 
+  const monthQuery = useQuery({
+    queryKey: ["attendance-month", month],
+    enabled: mode === "month",
+    queryFn: async () => {
+      const { start, end } = monthBounds(month);
+      const { data, error } = await supabase
+        .from("attendance")
+        .select("id, class_id, day, total_students, present_students, comment")
+        .gte("day", start)
+        .lte("day", end);
+      if (error) throw error;
+      return (data ?? []) as AttendanceRow[];
+    },
+  });
+
   const classes = useMemo(
     () => sortClassesByLiter(classesQuery.data ?? []),
     [classesQuery.data],
   );
+
+  const monthRows = useMemo(() => {
+    const byClass = new Map<string, AttendanceRow[]>();
+    for (const r of monthQuery.data ?? []) {
+      const list = byClass.get(r.class_id) ?? [];
+      list.push(r);
+      byClass.set(r.class_id, list);
+    }
+    return classes.map((c) => {
+      const list = byClass.get(c.id) ?? [];
+      const total = list.reduce((s2, r) => s2 + r.total_students, 0);
+      const present = list.reduce((s2, r) => s2 + r.present_students, 0);
+      return {
+        classId: c.id,
+        name: c.name,
+        days: list.length,
+        total,
+        present,
+        percent: total > 0 ? Math.round((present / total) * 100) : null,
+      };
+    });
+  }, [monthQuery.data, classes]);
 
   const byClass = useMemo(() => {
     const map = new Map<string, AttendanceRow>();
@@ -135,22 +183,48 @@ function AdminAttendanceView() {
       ? Math.round(withData.reduce((s, r) => s + (r.percent ?? 0), 0) / withData.length)
       : null;
 
+  const monthAvg = (() => {
+    const withRows = monthRows.filter((r) => r.total > 0);
+    if (withRows.length === 0) return null;
+    return Math.round(withRows.reduce((s, r) => s + (r.percent ?? 0), 0) / withRows.length);
+  })();
+
   return (
     <>
       <p className="mt-2 text-sm text-muted-foreground">
-        Барлық сыныптардың күндік қатысу деректерін литер бойынша бақылаңыз.
+        Барлық сыныптардың қатысу деректерін күн және ай бойынша бақылаңыз.
       </p>
 
-      <div className="mt-6">
-        <DayPicker day={day} onChange={setDay} />
+      <div className="mt-6 inline-flex rounded-xl border border-border bg-card p-1">
+        <Button
+          variant={mode === "day" ? "default" : "ghost"}
+          size="sm"
+          onClick={() => setMode("day")}
+        >
+          Күндік
+        </Button>
+        <Button
+          variant={mode === "month" ? "default" : "ghost"}
+          size="sm"
+          onClick={() => setMode("month")}
+        >
+          Айлық
+        </Button>
       </div>
 
-      {avgPercent !== null && (
-        <p className="mt-4 rounded-xl border border-border bg-secondary/40 px-4 py-3 text-sm">
-          Орташа қатысу: <span className="font-semibold">{avgPercent}%</span> ·{" "}
-          {withData.length} сынып дерек енгізген
-        </p>
-      )}
+      {mode === "day" ? (
+        <>
+          <div className="mt-6">
+            <DayPicker day={day} onChange={setDay} />
+          </div>
+
+          {avgPercent !== null && (
+            <p className="mt-4 rounded-xl border border-border bg-secondary/40 px-4 py-3 text-sm">
+              Орташа қатысу: <span className="font-semibold">{avgPercent}%</span> ·{" "}
+              {withData.length} сынып дерек енгізген
+            </p>
+          )}
+
 
       <section className="mt-6 rounded-2xl border border-border bg-card p-6">
         {classes.length === 0 ? (
@@ -204,6 +278,71 @@ function AdminAttendanceView() {
           </div>
         )}
       </section>
+        </>
+      ) : (
+        <>
+          <div className="mt-6 space-y-1">
+            <Label htmlFor="att-month">Ай</Label>
+            <Input
+              id="att-month"
+              type="month"
+              value={month}
+              onChange={(e) => setMonth(e.target.value)}
+              className="w-44"
+            />
+          </div>
+
+          {monthAvg !== null && (
+            <p className="mt-4 rounded-xl border border-border bg-secondary/40 px-4 py-3 text-sm">
+              Ай бойынша орташа қатысу:{" "}
+              <span className="font-semibold">{monthAvg}%</span>
+            </p>
+          )}
+
+          <section className="mt-6 rounded-2xl border border-border bg-card p-6">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-muted-foreground">
+                    <th className="py-2 font-medium">Сынып</th>
+                    <th className="py-2 text-right font-medium">Күндер</th>
+                    <th className="py-2 text-right font-medium">Келгені</th>
+                    <th className="py-2 text-right font-medium">Орташа %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {monthRows.map((r) => (
+                    <tr key={r.classId} className="border-t border-border/60">
+                      <td className="py-2.5 pr-3 font-medium">{r.name} сынып</td>
+                      <td className="py-2.5 text-right">{r.days}</td>
+                      <td className="py-2.5 text-right">
+                        {r.total > 0 ? `${r.present}/${r.total}` : "—"}
+                      </td>
+                      <td className="py-2.5 text-right">
+                        {r.percent !== null ? (
+                          <span
+                            className={
+                              r.percent >= 90
+                                ? "font-semibold text-primary"
+                                : r.percent >= 75
+                                  ? "font-semibold"
+                                  : "font-semibold text-destructive"
+                            }
+                          >
+                            {r.percent}%
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </>
+      )}
     </>
   );
 }
@@ -278,6 +417,8 @@ function TeacherAttendanceView() {
 
   const percent = total > 0 ? Math.round((present / total) * 100) : 0;
   const recentRows = attendanceQuery.data ?? [];
+  const today = new Date().toISOString().slice(0, 10);
+  const editable = day === today;
 
   if (!myClass) {
     return (
@@ -307,6 +448,7 @@ function TeacherAttendanceView() {
                   min={0}
                   max={60}
                   value={total}
+                  disabled={!editable}
                   onChange={(e) =>
                     setTotal(Math.max(0, Math.min(60, Number(e.target.value) || 0)))
                   }
@@ -320,6 +462,7 @@ function TeacherAttendanceView() {
                   min={0}
                   max={60}
                   value={present}
+                  disabled={!editable}
                   onChange={(e) =>
                     setPresent(Math.max(0, Math.min(60, Number(e.target.value) || 0)))
                   }
@@ -333,6 +476,7 @@ function TeacherAttendanceView() {
                 id="a-comment"
                 value={comment}
                 maxLength={500}
+                disabled={!editable}
                 onChange={(e) => setComment(e.target.value)}
                 placeholder="Себебі, ескертпе"
               />
@@ -340,10 +484,15 @@ function TeacherAttendanceView() {
             <Button
               className="w-full"
               onClick={() => saveMutation.mutate()}
-              disabled={saveMutation.isPending}
+              disabled={!editable || saveMutation.isPending}
             >
               Сақтау
             </Button>
+            {!editable && (
+              <p className="rounded-xl border border-border bg-secondary/40 px-4 py-3 text-sm text-muted-foreground">
+                Өткен күндерді өзгерту мүмкін емес — тек ағымдағы күн белгіленеді.
+              </p>
+            )}
           </div>
         </section>
 
