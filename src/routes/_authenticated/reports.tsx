@@ -218,6 +218,27 @@ function ReportsPage() {
 
         <section className="rounded-2xl border border-border bg-card p-6">
           <h2 className="font-display font-bold">Жүктелген есептер</h2>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button
+              variant={filterClassId === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilterClassId("all")}
+            >
+              Барлығы
+            </Button>
+            {classes.map((c) => (
+              <Button
+                key={c.id}
+                variant={filterClassId === c.id ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilterClassId(c.id)}
+              >
+                {c.name}
+              </Button>
+            ))}
+          </div>
+
           {rows.length === 0 ? (
             <p className="mt-4 text-sm text-muted-foreground">Әзірге есеп жоқ.</p>
           ) : (
