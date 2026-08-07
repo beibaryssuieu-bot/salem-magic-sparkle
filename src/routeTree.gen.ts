@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAttendanceRouteImport } from './routes/_authenticated/attendance'
+import { Route as AuthenticatedClassCriteriaRouteImport } from './routes/_authenticated/class-criteria'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedEduqorRouteImport } from './routes/_authenticated/eduqor'
 import { Route as AuthenticatedEventsRouteImport } from './routes/_authenticated/events'
@@ -44,6 +45,12 @@ const AuthenticatedAttendanceRoute = AuthenticatedAttendanceRouteImport.update({
   path: '/attendance',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedClassCriteriaRoute =
+  AuthenticatedClassCriteriaRouteImport.update({
+    id: '/class-criteria',
+    path: '/class-criteria',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -75,6 +82,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
+  '/class-criteria': typeof AuthenticatedClassCriteriaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/eduqor': typeof AuthenticatedEduqorRoute
   '/events': typeof AuthenticatedEventsRoute
@@ -86,6 +94,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
+  '/class-criteria': typeof AuthenticatedClassCriteriaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/eduqor': typeof AuthenticatedEduqorRoute
   '/events': typeof AuthenticatedEventsRoute
@@ -99,6 +108,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/attendance': typeof AuthenticatedAttendanceRoute
+  '/_authenticated/class-criteria': typeof AuthenticatedClassCriteriaRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/eduqor': typeof AuthenticatedEduqorRoute
   '/_authenticated/events': typeof AuthenticatedEventsRoute
@@ -112,6 +122,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/admin'
     | '/attendance'
+    | '/class-criteria'
     | '/dashboard'
     | '/eduqor'
     | '/events'
@@ -123,6 +134,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/admin'
     | '/attendance'
+    | '/class-criteria'
     | '/dashboard'
     | '/eduqor'
     | '/events'
@@ -135,6 +147,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/admin'
     | '/_authenticated/attendance'
+    | '/_authenticated/class-criteria'
     | '/_authenticated/dashboard'
     | '/_authenticated/eduqor'
     | '/_authenticated/events'
@@ -185,6 +198,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAttendanceRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/class-criteria': {
+      id: '/_authenticated/class-criteria'
+      path: '/class-criteria'
+      fullPath: '/class-criteria'
+      preLoaderRoute: typeof AuthenticatedClassCriteriaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -226,6 +246,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAttendanceRoute: typeof AuthenticatedAttendanceRoute
+  AuthenticatedClassCriteriaRoute: typeof AuthenticatedClassCriteriaRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEduqorRoute: typeof AuthenticatedEduqorRoute
   AuthenticatedEventsRoute: typeof AuthenticatedEventsRoute
@@ -236,6 +257,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAttendanceRoute: AuthenticatedAttendanceRoute,
+  AuthenticatedClassCriteriaRoute: AuthenticatedClassCriteriaRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEduqorRoute: AuthenticatedEduqorRoute,
   AuthenticatedEventsRoute: AuthenticatedEventsRoute,
@@ -254,13 +276,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
