@@ -417,6 +417,8 @@ function TeacherAttendanceView() {
 
   const percent = total > 0 ? Math.round((present / total) * 100) : 0;
   const recentRows = attendanceQuery.data ?? [];
+  const today = new Date().toISOString().slice(0, 10);
+  const editable = day === today;
 
   if (!myClass) {
     return (
@@ -446,6 +448,7 @@ function TeacherAttendanceView() {
                   min={0}
                   max={60}
                   value={total}
+                  disabled={!editable}
                   onChange={(e) =>
                     setTotal(Math.max(0, Math.min(60, Number(e.target.value) || 0)))
                   }
@@ -459,6 +462,7 @@ function TeacherAttendanceView() {
                   min={0}
                   max={60}
                   value={present}
+                  disabled={!editable}
                   onChange={(e) =>
                     setPresent(Math.max(0, Math.min(60, Number(e.target.value) || 0)))
                   }
@@ -472,6 +476,7 @@ function TeacherAttendanceView() {
                 id="a-comment"
                 value={comment}
                 maxLength={500}
+                disabled={!editable}
                 onChange={(e) => setComment(e.target.value)}
                 placeholder="Себебі, ескертпе"
               />
@@ -479,10 +484,15 @@ function TeacherAttendanceView() {
             <Button
               className="w-full"
               onClick={() => saveMutation.mutate()}
-              disabled={saveMutation.isPending}
+              disabled={!editable || saveMutation.isPending}
             >
               Сақтау
             </Button>
+            {!editable && (
+              <p className="rounded-xl border border-border bg-secondary/40 px-4 py-3 text-sm text-muted-foreground">
+                Өткен күндерді өзгерту мүмкін емес — тек ағымдағы күн белгіленеді.
+              </p>
+            )}
           </div>
         </section>
 
