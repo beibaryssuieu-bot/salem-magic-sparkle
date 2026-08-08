@@ -18,6 +18,7 @@ import { Route as AuthenticatedClassCriteriaRouteImport } from './routes/_authen
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedEduqorRouteImport } from './routes/_authenticated/eduqor'
 import { Route as AuthenticatedEventsRouteImport } from './routes/_authenticated/events'
+import { Route as AuthenticatedPasswordRouteImport } from './routes/_authenticated/password'
 import { Route as AuthenticatedRatingRouteImport } from './routes/_authenticated/rating'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as ApiPublicSeedRosterRouteImport } from './routes/api/public/seed-roster'
@@ -67,6 +68,11 @@ const AuthenticatedEventsRoute = AuthenticatedEventsRouteImport.update({
   path: '/events',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPasswordRoute = AuthenticatedPasswordRouteImport.update({
+  id: '/password',
+  path: '/password',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedRatingRoute = AuthenticatedRatingRouteImport.update({
   id: '/rating',
   path: '/rating',
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/eduqor': typeof AuthenticatedEduqorRoute
   '/events': typeof AuthenticatedEventsRoute
+  '/password': typeof AuthenticatedPasswordRoute
   '/rating': typeof AuthenticatedRatingRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/api/public/seed-roster': typeof ApiPublicSeedRosterRoute
@@ -105,6 +112,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/eduqor': typeof AuthenticatedEduqorRoute
   '/events': typeof AuthenticatedEventsRoute
+  '/password': typeof AuthenticatedPasswordRoute
   '/rating': typeof AuthenticatedRatingRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/api/public/seed-roster': typeof ApiPublicSeedRosterRoute
@@ -120,6 +128,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/eduqor': typeof AuthenticatedEduqorRoute
   '/_authenticated/events': typeof AuthenticatedEventsRoute
+  '/_authenticated/password': typeof AuthenticatedPasswordRoute
   '/_authenticated/rating': typeof AuthenticatedRatingRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/api/public/seed-roster': typeof ApiPublicSeedRosterRoute
@@ -135,6 +144,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/eduqor'
     | '/events'
+    | '/password'
     | '/rating'
     | '/reports'
     | '/api/public/seed-roster'
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/eduqor'
     | '/events'
+    | '/password'
     | '/rating'
     | '/reports'
     | '/api/public/seed-roster'
@@ -162,6 +173,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/eduqor'
     | '/_authenticated/events'
+    | '/_authenticated/password'
     | '/_authenticated/rating'
     | '/_authenticated/reports'
     | '/api/public/seed-roster'
@@ -239,6 +251,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEventsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/password': {
+      id: '/_authenticated/password'
+      path: '/password'
+      fullPath: '/password'
+      preLoaderRoute: typeof AuthenticatedPasswordRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/rating': {
       id: '/_authenticated/rating'
       path: '/rating'
@@ -270,6 +289,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEduqorRoute: typeof AuthenticatedEduqorRoute
   AuthenticatedEventsRoute: typeof AuthenticatedEventsRoute
+  AuthenticatedPasswordRoute: typeof AuthenticatedPasswordRoute
   AuthenticatedRatingRoute: typeof AuthenticatedRatingRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
 }
@@ -281,6 +301,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEduqorRoute: AuthenticatedEduqorRoute,
   AuthenticatedEventsRoute: AuthenticatedEventsRoute,
+  AuthenticatedPasswordRoute: AuthenticatedPasswordRoute,
   AuthenticatedRatingRoute: AuthenticatedRatingRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
 }

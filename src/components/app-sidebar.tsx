@@ -4,6 +4,7 @@ import {
   CalendarDays,
   ClipboardCheck,
   FolderUp,
+  KeyRound,
   LayoutDashboard,
   Library,
   LogOut,
@@ -38,7 +39,9 @@ const items = [
   { title: "EduQor", url: "/eduqor", icon: Library },
   { title: "Іс-шаралар", url: "/events", icon: CalendarDays },
   { title: "Қатысым", url: "/attendance", icon: ClipboardCheck },
+  { title: "Парольді өзгерту", url: "/password", icon: KeyRound },
 ] as const;
+
 
 export function AppSidebar() {
   const { state } = useSidebar();
