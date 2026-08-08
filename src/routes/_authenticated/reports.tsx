@@ -184,19 +184,24 @@ function ReportsPage() {
             </div>
             <div className="space-y-2">
               <Label>Сынып</Label>
-              <Select value={classId} onValueChange={setClassId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Сынып таңдаңыз" />
-                </SelectTrigger>
-                <SelectContent>
-                  {classes.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name} сынып
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {me?.isAdmin ? (
+                <Select value={classId} onValueChange={setClassId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Сынып таңдаңыз" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {classes.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name} сынып
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input value={myClass ? `${myClass.name} сынып` : "Сынып тағайындалмаған"} readOnly />
+              )}
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="r-file">Файл</Label>
               <Input
