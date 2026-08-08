@@ -86,6 +86,13 @@ function DayPicker({ day, onChange }: { day: string; onChange: (d: string) => vo
   );
 }
 
+function shiftMonth(month: string, delta: number) {
+  const y = Number(month.slice(0, 4));
+  const m = Number(month.slice(5, 7));
+  const d = new Date(y, m - 1 + delta, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
 function monthBounds(month: string) {
   const y = Number(month.slice(0, 4));
   const m = Number(month.slice(5, 7));
