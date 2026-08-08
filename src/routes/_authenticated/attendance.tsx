@@ -295,15 +295,30 @@ function AdminAttendanceView() {
         </>
       ) : (
         <>
-          <div className="mt-6 space-y-1">
-            <Label htmlFor="att-month">Ай</Label>
-            <Input
-              id="att-month"
-              type="month"
-              value={month}
-              onChange={(e) => setMonth(e.target.value)}
-              className="w-44"
-            />
+          <div className="mt-6 flex flex-wrap items-end gap-3">
+            <Button variant="outline" size="icon" onClick={() => setMonth(shiftMonth(month, -1))}>
+              <ChevronLeft className="size-4" />
+            </Button>
+            <div className="space-y-1">
+              <Label htmlFor="att-month">Ай</Label>
+              <Input
+                id="att-month"
+                type="month"
+                value={month}
+                onChange={(e) => setMonth(e.target.value)}
+                className="w-44"
+              />
+            </div>
+            <Button variant="outline" size="icon" onClick={() => setMonth(shiftMonth(month, 1))}>
+              <ChevronRight className="size-4" />
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setMonth(new Date().toISOString().slice(0, 7))}
+            >
+              Ағымдағы ай
+            </Button>
           </div>
 
           {monthAvg !== null && (
@@ -313,48 +328,95 @@ function AdminAttendanceView() {
             </p>
           )}
 
-          <section className="mt-6 rounded-2xl border border-border bg-card p-6">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-muted-foreground">
-                    <th className="py-2 font-medium">Сынып</th>
-                    <th className="py-2 text-right font-medium">Күндер</th>
-                    <th className="py-2 text-right font-medium">Келгені</th>
-                    <th className="py-2 text-right font-medium">Орташа %</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {monthRows.map((r) => (
-                    <tr key={r.classId} className="border-t border-border/60">
-                      <td className="py-2.5 pr-3 font-medium">{r.name} сынып</td>
-                      <td className="py-2.5 text-right">{r.days}</td>
-                      <td className="py-2.5 text-right">
-                        {r.total > 0 ? `${r.present}/${r.total}` : "—"}
-                      </td>
-                      <td className="py-2.5 text-right">
-                        {r.percent !== null ? (
-                          <span
-                            className={
-                              r.percent >= 90
-                                ? "font-semibold text-primary"
-                                : r.percent >= 75
-                                  ? "font-semibold"
-                                  : "font-semibold text-destructive"
-                            }
-                          >
-                            {r.percent}%
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
-                      </td>
+          <section className="mt-6 rounded-2xl border border-border bg-card p-4">
+            {classes.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Сыныптар тізімі жүктелуде…</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-max min-w-full border-separate border-spacing-0 text-xs">
+                  <thead>
+                    <tr>
+                      <th className="sticky left-0 z-10 bg-card px-2 py-2 text-left font-medium text-muted-foreground">
+                        Сынып
+                      </th>
+                      {monthDays.map((d) => (
+                        <th
+                          key={d}
+                          className="w-9 px-1 py-2 text-center font-medium text-muted-foreground"
+                        >
+                          {d}
+                        </th>
+                      ))}
+                      <th className="px-2 py-2 text-right font-medium text-muted-foreground">
+                        Орташа
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {monthRows.map((r) => (
+                      <tr key={r.classId}>
+                        <td className="sticky left-0 z-10 whitespace-nowrap border-t border-border/60 bg-card px-2 py-1.5 font-medium">
+                          {r.name}
+                        </td>
+                        {monthDays.map((d) => {
+                          const iso = `${month}-${String(d).padStart(2, "0")}`;
+                          const cell = monthCells.get(`${r.classId}|${iso}`);
+                          const pct =
+                            cell && cell.total_students > 0
+                              ? Math.round((cell.present_students / cell.total_students) * 100)
+                              : null;
+                          return (
+                            <td
+                              key={d}
+                              title={
+                                cell
+                                  ? `${r.name} · ${iso} · ${cell.present_students}/${cell.total_students}${cell.comment ? ` · ${cell.comment}` : ""}`
+                                  : `${r.name} · ${iso} · дерек жоқ`
+                              }
+                              className={
+                                "border-t border-border/60 px-1 py-1.5 text-center tabular-nums " +
+                                (pct === null
+                                  ? "text-muted-foreground/50"
+                                  : pct >= 90
+                                    ? "font-semibold text-primary"
+                                    : pct >= 75
+                                      ? "font-semibold"
+                                      : "font-semibold text-destructive")
+                              }
+                            >
+                              {pct === null ? "—" : pct}
+                            </td>
+                          );
+                        })}
+                        <td className="border-t border-border/60 px-2 py-1.5 text-right">
+                          {r.percent !== null ? (
+                            <span
+                              className={
+                                r.percent >= 90
+                                  ? "font-semibold text-primary"
+                                  : r.percent >= 75
+                                    ? "font-semibold"
+                                    : "font-semibold text-destructive"
+                              }
+                            >
+                              {r.percent}%
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            <p className="mt-3 text-xs text-muted-foreground">
+              Ұяшықтағы сан — сол күнгі қатысу пайызы. «—» деген белгі дерек енгізілмегенін
+              білдіреді.
+            </p>
           </section>
+
         </>
       )}
     </>
