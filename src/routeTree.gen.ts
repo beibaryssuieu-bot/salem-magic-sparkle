@@ -20,6 +20,7 @@ import { Route as AuthenticatedEduqorRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedEventsRouteImport } from './routes/_authenticated/events'
 import { Route as AuthenticatedRatingRouteImport } from './routes/_authenticated/rating'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as ApiPublicSeedRosterRouteImport } from './routes/api/public/seed-roster'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -76,6 +77,11 @@ const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicSeedRosterRoute = ApiPublicSeedRosterRouteImport.update({
+  id: '/api/public/seed-roster',
+  path: '/api/public/seed-roster',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/events': typeof AuthenticatedEventsRoute
   '/rating': typeof AuthenticatedRatingRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/api/public/seed-roster': typeof ApiPublicSeedRosterRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -100,6 +107,7 @@ export interface FileRoutesByTo {
   '/events': typeof AuthenticatedEventsRoute
   '/rating': typeof AuthenticatedRatingRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/api/public/seed-roster': typeof ApiPublicSeedRosterRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -114,6 +122,7 @@ export interface FileRoutesById {
   '/_authenticated/events': typeof AuthenticatedEventsRoute
   '/_authenticated/rating': typeof AuthenticatedRatingRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
+  '/api/public/seed-roster': typeof ApiPublicSeedRosterRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -128,6 +137,7 @@ export interface FileRouteTypes {
     | '/events'
     | '/rating'
     | '/reports'
+    | '/api/public/seed-roster'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/events'
     | '/rating'
     | '/reports'
+    | '/api/public/seed-roster'
   id:
     | '__root__'
     | '/'
@@ -153,12 +164,14 @@ export interface FileRouteTypes {
     | '/_authenticated/events'
     | '/_authenticated/rating'
     | '/_authenticated/reports'
+    | '/api/public/seed-roster'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicSeedRosterRoute: typeof ApiPublicSeedRosterRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -240,6 +253,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReportsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/seed-roster': {
+      id: '/api/public/seed-roster'
+      path: '/api/public/seed-roster'
+      fullPath: '/api/public/seed-roster'
+      preLoaderRoute: typeof ApiPublicSeedRosterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -272,17 +292,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicSeedRosterRoute: ApiPublicSeedRosterRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
