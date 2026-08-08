@@ -141,6 +141,19 @@ function AdminAttendanceView() {
     [classesQuery.data],
   );
 
+  const monthDays = useMemo(() => {
+    const y = Number(month.slice(0, 4));
+    const m = Number(month.slice(5, 7));
+    const count = new Date(y, m, 0).getDate();
+    return Array.from({ length: count }, (_, i) => i + 1);
+  }, [month]);
+
+  const monthCells = useMemo(() => {
+    const map = new Map<string, AttendanceRow>();
+    for (const r of monthQuery.data ?? []) map.set(`${r.class_id}|${r.day}`, r);
+    return map;
+  }, [monthQuery.data]);
+
   const monthRows = useMemo(() => {
     const byClass = new Map<string, AttendanceRow[]>();
     for (const r of monthQuery.data ?? []) {
@@ -162,6 +175,7 @@ function AdminAttendanceView() {
       };
     });
   }, [monthQuery.data, classes]);
+
 
   const byClass = useMemo(() => {
     const map = new Map<string, AttendanceRow>();
