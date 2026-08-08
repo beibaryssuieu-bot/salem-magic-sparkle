@@ -232,25 +232,25 @@ function ReportsPage() {
         <section className="rounded-2xl border border-border bg-card p-6">
           <h2 className="font-display font-bold">Жүктелген есептер</h2>
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button
-              variant={filterClassId === "all" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilterClassId("all")}
-            >
-              Барлығы
-            </Button>
-            {classes.map((c) => (
-              <Button
-                key={c.id}
-                variant={filterClassId === c.id ? "default" : "outline"}
-                size="sm"
-                onClick={() => setFilterClassId(c.id)}
-              >
-                {c.name}
-              </Button>
-            ))}
-          </div>
+          {me?.isAdmin && (
+            <div className="mt-4 max-w-xs space-y-2">
+              <Label>Сынып бойынша сүзгі</Label>
+              <Select value={filterClassId} onValueChange={setFilterClassId}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Барлық сыныптар</SelectItem>
+                  {classes.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name} сынып
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
 
           {rows.length === 0 ? (
             <p className="mt-4 text-sm text-muted-foreground">Әзірге есеп жоқ.</p>
