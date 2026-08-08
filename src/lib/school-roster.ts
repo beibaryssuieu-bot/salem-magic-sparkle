@@ -1,0 +1,106 @@
+/**
+ * №82 мектептің сыныптары мен сынып жетекшілері.
+ * login — фамилияның латынша жазылуы, бастапқы пароль = login + "82".
+ * teacher = null — сынып вакант, аккаунт жасалмайды.
+ */
+export type RosterEntry = {
+  className: string;
+  fullName: string | null;
+  login: string | null;
+};
+
+export const SCHOOL_ROSTER: RosterEntry[] = [
+  { className: "2А", fullName: "Карагулова Ләззат Итемгенқызы", login: "karagulova" },
+  { className: "2Ә", fullName: "Умирзакова Айнұр Кульмурзаевна", login: "umirzakova" },
+  { className: "2Б", fullName: "Төлешова Алмагүл Амангелдіқызы", login: "toleshova" },
+  { className: "2В", fullName: "Алдан Әсемгүл Маратқызы", login: "aldan" },
+  { className: "2Г", fullName: "Абубакирова Жанат Болатовна", login: "abubakirova" },
+  { className: "2Ғ", fullName: "Теңелова Демеш Кемелбайқызы", login: "tenelova" },
+  { className: "2Д", fullName: "Қазтаева Жұлдыз Темірбекқызы", login: "kaztaeva" },
+  { className: "2Е", fullName: "Ажибаева Жұлдыз Сазанбаевна", login: "azhibaeva" },
+  { className: "2Ж", fullName: "Мырзагарина Нургуль Муратовна", login: "myrzagarina" },
+  { className: "2З", fullName: "Болатбекқызы Еркеназ", login: "bolatbekkyzy" },
+  { className: "2И", fullName: "Нуралиева Акмарал Танатовна", login: "nuralieva" },
+  { className: "2К", fullName: "Қарабатырова Аңсаған Батырхановна", login: "karabatyrova" },
+  { className: "2Қ", fullName: "Мырзатаева Інкүгүл Бекетқызы", login: "myrzataeva" },
+  { className: "2Л", fullName: "Алмурзаева Гульнур Орынбасаровна", login: "almurzaeva" },
+
+  { className: "3А", fullName: "Изматова Назым Берікбайқызы", login: "izmatova" },
+  { className: "3Ә", fullName: "Ағымедолла Көркем Бөлекбайқызы", login: "agymedolla" },
+  { className: "3Б", fullName: null, login: null },
+  { className: "3В", fullName: "Исанова Гулмира Орынбаевна", login: "isanova" },
+  { className: "3Г", fullName: "Берікова Дильназ Берікқызы", login: "berikova" },
+  { className: "3Ғ", fullName: "Джуманова Дилбар Султанмұратовна", login: "dzhumanova" },
+  { className: "3Д", fullName: "Күлімбет Фариза Нұрланқызы", login: "kulimbet" },
+  { className: "3Е", fullName: "Шамшадин Елана Алтынбекқызы", login: "shamshadin" },
+  { className: "3Ж", fullName: "Дюсембаева Жансая Абаевна", login: "dyusembaeva" },
+  { className: "3З", fullName: "Алшора Перизат Бақтығаликызы", login: "alshora" },
+
+  { className: "4А", fullName: "Тобағабылова Жайнагүл Серікқызы", login: "tobagabylova" },
+  { className: "4Ә", fullName: "Ибрашева Еркеназ Болатбекқызы", login: "ibrasheva" },
+  { className: "4Б", fullName: "Құрамысова Динара Саматқызы", login: "kuramysova" },
+  { className: "4В", fullName: "Өтегұлова Фатима Ертарғынқызы", login: "otegulova" },
+  { className: "4Г", fullName: "Умирзакова Жансезім Бақытжановна", login: "umirzakova2" },
+  { className: "4Ғ", fullName: "Махмутова Ақкеркем Сериковна", login: "makhmutova" },
+  { className: "4Д", fullName: "Иванова Мадина Газизовна", login: "ivanova" },
+  { className: "4Е", fullName: "Қойбағарова Фарида Несіпбайқызы", login: "koibagarova" },
+  { className: "4Ж", fullName: "Искендирова Айнұр Тәуірбаевна", login: "iskendirova" },
+  { className: "4З", fullName: null, login: null },
+  { className: "4И", fullName: "Мульдикешева Асемгуль Нурлыбековна", login: "muldikesheva" },
+
+  { className: "5А", fullName: "Миргуль Каршигаевна", login: "mirgul" },
+  { className: "5Ә", fullName: "Аяжан Болатбайқызы", login: "ayazhan" },
+  { className: "5Б", fullName: null, login: null },
+  { className: "5В", fullName: "Бақытжанова Сағыныш Жолдасқызы", login: "bakytzhanova" },
+  { className: "5Г", fullName: "Магадан Алтынтаң", login: "magadan" },
+  { className: "5Ғ", fullName: "Шабикова Акжан Аманкуловна", login: "shabikova" },
+  { className: "5Д", fullName: "Рашидов Данияр Мерекеұлы", login: "rashidov" },
+  { className: "5Е", fullName: "Сүйеу Бейбарыс Нұртілекұлы", login: "suieu" },
+  { className: "5Ж", fullName: "Бозангалиев Есбол", login: "bozangaliev" },
+  { className: "5З", fullName: "Ерғазы Нұрбек", login: "ergazy" },
+
+  { className: "6А", fullName: "Алданаева Жанар Жандосовна", login: "aldanaeva" },
+  { className: "6Ә", fullName: "Жұмағалиева Гүлнұр Төреғалиқызы", login: "zhumagalieva" },
+  { className: "6Б", fullName: "Қайроллова Гүлнұр Муслімқызы", login: "kairollova" },
+  { className: "6В", fullName: "Нұрбергенова Аида Алиханқызы", login: "nurbergenova" },
+  { className: "6Г", fullName: "Назарова Самал Ақылбекқызы", login: "nazarova" },
+  { className: "6Ғ", fullName: "Балтабай Назерке Берікбайқызы", login: "baltabay" },
+  { className: "6Д", fullName: "Алмаханова Айдана Табылбайқызы", login: "almakhanova" },
+  { className: "6Е", fullName: "Бижанова Мира Сисеновна", login: "bizhanova" },
+  { className: "6Ж", fullName: "Избасар Мөлдір Қуанышқызы", login: "izbasar" },
+  { className: "6З", fullName: "Есболсын Ардақ Жанабайқызы", login: "esbolsyn" },
+  { className: "6И", fullName: "Адылова Салтанат Сатбайқызы", login: "adylova" },
+
+  { className: "7А", fullName: "Досыва Аружан", login: "dosyva" },
+  { className: "7Ә", fullName: "Кемашова Жансая Дулатқызы", login: "kemashova" },
+  { className: "7Б", fullName: "Әлім Меруерт Сырымқызы", login: "alim" },
+  { className: "7В", fullName: "Махамбетова Назерке Ерболатқызы", login: "makhambetova" },
+  { className: "7Г", fullName: "Ермухатова Мөлдір Амангелдіевна", login: "ermukhatova" },
+  { className: "7Ғ", fullName: "Табанова Гүлдәурен Қуанышқалиқызы", login: "tabanova" },
+  { className: "7Д", fullName: "Таспаева Жадыра Сәлімбайқызы", login: "taspaeva" },
+  { className: "7Е", fullName: "Байниязов Мейірбек Хабидуллаұлы", login: "bainiyazov" },
+  { className: "7Ж", fullName: "Сағындық Жазира Қадырбекқызы", login: "sagyndyk" },
+  { className: "7З", fullName: "Спан Жасқайрат Қайырбекұлы", login: "span" },
+
+  { className: "8А", fullName: "Бикеева Мөлдір Сырымовна", login: "bikeeva" },
+  { className: "8Ә", fullName: "Жанузакова Жазира Бекарысовна", login: "zhanuzakova" },
+  { className: "8Б", fullName: "Сатыбалдина Алия Абишхатовна", login: "satybaldina" },
+  { className: "8В", fullName: "Батырбекова Гульшат Азеровна", login: "batyrbekova" },
+  { className: "8Г", fullName: "Аделова Айжан Асхатовна", login: "adelova" },
+  { className: "8Ғ", fullName: "Әбілхайыров Ердәулет Достанұлы", login: "abilkhaiyrov" },
+  { className: "8Д", fullName: "Алмурзаев Нұрлыбек Орынбасарұлы", login: "almurzaev" },
+  { className: "8Е", fullName: "Маратұлы Бекзат", login: "maratuly" },
+  { className: "8Ж", fullName: "Құлданова Ақжарқын Нығметовна", login: "kuldanova" },
+  { className: "8З", fullName: "Нурбулатова Лаура", login: "nurbulatova" },
+
+  { className: "9А", fullName: "Тоймағамбетова Эльмира Бимағамбетовна", login: "toimagambetova" },
+  { className: "9Ә", fullName: "Токсамбаева Алтынгуль Ажимбаевна", login: "toksambaeva" },
+  { className: "9Б", fullName: "Ержанова Гүлім Сейілқызы", login: "erzhanova" },
+  { className: "9В", fullName: "Боранбай Айдана Еркінқызы", login: "boranbay" },
+  { className: "9Г", fullName: "Өмірзакова Інжу Алыбайқызы", login: "omirzakova" },
+  { className: "9Ғ", fullName: "Алмбаева Ақмарал Асқатовна", login: "almbaeva" },
+  { className: "9Д", fullName: "Ермекова Мөлдір Есқабылқызы", login: "ermekova" },
+  { className: "9Е", fullName: "Алибеков Адилбек Арыстанбекович", login: "alibekov" },
+  { className: "9Ж", fullName: "Сагиев Дидар Қарасайұлы", login: "sagiev" },
+  { className: "9З", fullName: "Исмагулов Сағадат Аманкелдиевич", login: "ismagulov" },
+];

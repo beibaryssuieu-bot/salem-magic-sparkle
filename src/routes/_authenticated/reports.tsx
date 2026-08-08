@@ -94,12 +94,15 @@ function ReportsPage() {
   const uploadMutation = useMutation({
     mutationFn: async () => {
       if (!file || !title.trim()) throw new Error("empty");
+      const own = (classesQuery.data ?? []).find((c) => c.name === me?.profile?.class_name);
+      const targetClassId = me?.isAdmin ? classId : (own?.id ?? "");
       const path = `${user!.id}/${crypto.randomUUID()}-${file.name.replace(/[^\w.\-]/g, "_")}`;
       const up = await supabase.storage.from("reports").upload(path, file);
       if (up.error) throw up.error;
       const { error } = await supabase.from("reports").insert({
         user_id: user!.id,
-        class_id: classId || null,
+        class_id: targetClassId || null,
+
         title: title.trim(),
         comment: comment.trim() || null,
         file_path: path,
@@ -143,9 +146,14 @@ function ReportsPage() {
   }
 
   const classes = sortClassesByLiter(classesQuery.data ?? []);
+  const myClass = classes.find((c) => c.name === me?.profile?.class_name);
   const allRows = reportsQuery.data ?? [];
-  const rows =
-    filterClassId === "all" ? allRows : allRows.filter((r) => r.class_id === filterClassId);
+  const rows = me?.isAdmin
+    ? filterClassId === "all"
+      ? allRows
+      : allRows.filter((r) => r.class_id === filterClassId)
+    : allRows.filter((r) => !!myClass && r.class_id === myClass.id);
+
 
   function authorName(id: string) {
     const p = authorsQuery.data?.find((a) => a.id === id);
@@ -176,19 +184,24 @@ function ReportsPage() {
             </div>
             <div className="space-y-2">
               <Label>Сынып</Label>
-              <Select value={classId} onValueChange={setClassId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Сынып таңдаңыз" />
-                </SelectTrigger>
-                <SelectContent>
-                  {classes.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name} сынып
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {me?.isAdmin ? (
+                <Select value={classId} onValueChange={setClassId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Сынып таңдаңыз" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {classes.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name} сынып
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input value={myClass ? `${myClass.name} сынып` : "Сынып тағайындалмаған"} readOnly />
+              )}
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="r-file">Файл</Label>
               <Input
@@ -219,25 +232,25 @@ function ReportsPage() {
         <section className="rounded-2xl border border-border bg-card p-6">
           <h2 className="font-display font-bold">Жүктелген есептер</h2>
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button
-              variant={filterClassId === "all" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilterClassId("all")}
-            >
-              Барлығы
-            </Button>
-            {classes.map((c) => (
-              <Button
-                key={c.id}
-                variant={filterClassId === c.id ? "default" : "outline"}
-                size="sm"
-                onClick={() => setFilterClassId(c.id)}
-              >
-                {c.name}
-              </Button>
-            ))}
-          </div>
+          {me?.isAdmin && (
+            <div className="mt-4 max-w-xs space-y-2">
+              <Label>Сынып бойынша сүзгі</Label>
+              <Select value={filterClassId} onValueChange={setFilterClassId}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Барлық сыныптар</SelectItem>
+                  {classes.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name} сынып
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
 
           {rows.length === 0 ? (
             <p className="mt-4 text-sm text-muted-foreground">Әзірге есеп жоқ.</p>
