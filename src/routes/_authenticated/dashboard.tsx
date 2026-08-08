@@ -133,18 +133,26 @@ function Dashboard() {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Select value={activeClassId} onValueChange={setClassId}>
+            <Select
+              value={activeClassId}
+              onValueChange={setClassId}
+              disabled={!me?.isAdmin}
+            >
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="Сынып" />
               </SelectTrigger>
               <SelectContent>
-                {classes.map((c) => (
+                {(me?.isAdmin
+                  ? classes
+                  : classes.filter((c) => c.name === me?.profile?.class_name)
+                ).map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.name} сынып
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+
 
             <Select
               value={year}
