@@ -94,12 +94,15 @@ function ReportsPage() {
   const uploadMutation = useMutation({
     mutationFn: async () => {
       if (!file || !title.trim()) throw new Error("empty");
+      const own = (classesQuery.data ?? []).find((c) => c.name === me?.profile?.class_name);
+      const targetClassId = me?.isAdmin ? classId : (own?.id ?? "");
       const path = `${user!.id}/${crypto.randomUUID()}-${file.name.replace(/[^\w.\-]/g, "_")}`;
       const up = await supabase.storage.from("reports").upload(path, file);
       if (up.error) throw up.error;
       const { error } = await supabase.from("reports").insert({
         user_id: user!.id,
-        class_id: classId || null,
+        class_id: targetClassId || null,
+
         title: title.trim(),
         comment: comment.trim() || null,
         file_path: path,
