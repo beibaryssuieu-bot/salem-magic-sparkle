@@ -143,9 +143,14 @@ function ReportsPage() {
   }
 
   const classes = sortClassesByLiter(classesQuery.data ?? []);
+  const myClass = classes.find((c) => c.name === me?.profile?.class_name);
   const allRows = reportsQuery.data ?? [];
-  const rows =
-    filterClassId === "all" ? allRows : allRows.filter((r) => r.class_id === filterClassId);
+  const rows = me?.isAdmin
+    ? filterClassId === "all"
+      ? allRows
+      : allRows.filter((r) => r.class_id === filterClassId)
+    : allRows.filter((r) => !!myClass && r.class_id === myClass.id);
+
 
   function authorName(id: string) {
     const p = authorsQuery.data?.find((a) => a.id === id);
