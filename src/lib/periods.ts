@@ -3,7 +3,7 @@ import { KZ_MONTHS } from "@/lib/metrics";
 /** Оқу жылы: қыркүйек (09) — мамыр (05) */
 export const ACADEMIC_MONTHS = [9, 10, 11, 12, 1, 2, 3, 4, 5] as const;
 
-export type PeriodKind = "month" | "quarter" | "half" | "year";
+export type PeriodKind = "week" | "month" | "quarter" | "half" | "year";
 
 export type PeriodOption = {
   value: string;
