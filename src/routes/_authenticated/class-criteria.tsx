@@ -14,8 +14,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PeriodPicker } from "@/components/period-picker";
 import { useProfile, useSession } from "@/lib/auth";
-import { formatPeriod } from "@/lib/metrics";
+import { periodTitle } from "@/lib/periods";
 import { sortClassesByLiter } from "@/lib/utils";
 import {
   CLASS_CRITERIA,
@@ -51,7 +52,7 @@ export const Route = createFileRoute("/_authenticated/class-criteria")({
 
 function currentPeriod() {
   const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
 }
 
 function ClassCriteriaPage() {
@@ -268,7 +269,7 @@ function ClassCriteriaPage() {
                 <li key={r.id} className="flex justify-between">
                   <span>{classes.find((c) => c.id === r.class_id)?.name ?? "—"}</span>
                   <span>
-                    {formatPeriod(r.period)} · {classTotalPoints(r.scores)} балл
+                    {periodTitle(r.period)} · {classTotalPoints(r.scores)} балл
                   </span>
                 </li>
               ))}
