@@ -56,16 +56,28 @@ export function mondayOf(iso: string) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+/**
+ * Апта кезеңінің сақталатын күні. Айлық кезеңдер әрқашан «-01» болғандықтан,
+ * дүйсенбі айдың 1-і болса, кезең күні 2-сіне ығыстырылады (қақтығысты болдырмау).
+ */
+export function weekPeriodDate(iso: string) {
+  const monday = mondayOf(iso);
+  if (!monday.endsWith("-01")) return monday;
+  const d = new Date(monday + "T12:00:00");
+  d.setDate(d.getDate() + 1);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 /** Апта аралығының қысқаша жазбасы: 01.09–07.09 */
-export function weekRangeLabel(monday: string) {
-  const s = new Date(monday + "T12:00:00");
+export function weekRangeLabel(period: string) {
+  const s = new Date(mondayOf(period) + "T12:00:00");
   const e = new Date(s);
   e.setDate(e.getDate() + 6);
   const f = (d: Date) => `${pad(d.getDate())}.${pad(d.getMonth() + 1)}`;
   return `${f(s)}–${f(e)}`;
 }
 
-/** Оқу жылындағы барлық апталар (дүйсенбі күндері) */
+/** Оқу жылындағы барлық апталар (кезең күндері) */
 export function academicWeeks(startYear: number): string[] {
   const from = `${startYear}-09-01`;
   const to = `${startYear + 1}-05-31`;
@@ -77,7 +89,7 @@ export function academicWeeks(startYear: number): string[] {
   }
   const weeks: string[] = [];
   while (cur <= to) {
-    weeks.push(cur);
+    weeks.push(weekPeriodDate(cur));
     const d = new Date(cur + "T12:00:00");
     d.setDate(d.getDate() + 7);
     cur = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
