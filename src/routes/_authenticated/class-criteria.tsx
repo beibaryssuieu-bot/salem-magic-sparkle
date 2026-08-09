@@ -166,15 +166,7 @@ function ClassCriteriaPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="cc-period">Ай</Label>
-                <Input
-                  id="cc-period"
-                  type="month"
-                  value={period}
-                  onChange={(e) => setPeriod(e.target.value)}
-                />
-              </div>
+              <PeriodPicker idPrefix="cc" value={period} onChange={setPeriod} />
             </div>
           </div>
 
