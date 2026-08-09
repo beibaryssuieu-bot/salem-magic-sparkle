@@ -93,7 +93,7 @@ function ClassCriteriaPage() {
     [classesQuery.data],
   );
   const activeClassId = classId || classes[0]?.id || "";
-  const periodDate = `${period}-01`;
+  const periodDate = period;
 
   useEffect(() => {
     const existing = (qualityQuery.data ?? []).find(
