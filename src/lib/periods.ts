@@ -48,7 +48,51 @@ const QUARTERS: { label: string; months: number[] }[] = [
   { label: "IV тоқсан (сәуір–мамыр)", months: [4, 5] },
 ];
 
+/** Берілген күннің дүйсенбісі (ISO) */
+export function mondayOf(iso: string) {
+  const d = new Date(iso + "T12:00:00");
+  const shift = (d.getDay() + 6) % 7;
+  d.setDate(d.getDate() - shift);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/** Апта аралығының қысқаша жазбасы: 01.09–07.09 */
+export function weekRangeLabel(monday: string) {
+  const s = new Date(monday + "T12:00:00");
+  const e = new Date(s);
+  e.setDate(e.getDate() + 6);
+  const f = (d: Date) => `${pad(d.getDate())}.${pad(d.getMonth() + 1)}`;
+  return `${f(s)}–${f(e)}`;
+}
+
+/** Оқу жылындағы барлық апталар (дүйсенбі күндері) */
+export function academicWeeks(startYear: number): string[] {
+  const from = `${startYear}-09-01`;
+  const to = `${startYear + 1}-05-31`;
+  let cur = mondayOf(from);
+  if (cur < from) {
+    const d = new Date(cur + "T12:00:00");
+    d.setDate(d.getDate() + 7);
+    cur = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+  const weeks: string[] = [];
+  while (cur <= to) {
+    weeks.push(cur);
+    const d = new Date(cur + "T12:00:00");
+    d.setDate(d.getDate() + 7);
+    cur = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+  return weeks;
+}
+
 export function periodOptions(kind: PeriodKind, startYear: number): PeriodOption[] {
+  if (kind === "week") {
+    return academicWeeks(startYear).map((mon, i) => ({
+      value: `w-${mon}`,
+      label: `${i + 1}-апта (${weekRangeLabel(mon)})`,
+      periods: [mon],
+    }));
+  }
   if (kind === "month") {
     return ACADEMIC_MONTHS.map((m) => ({
       value: `m-${m}`,
@@ -86,7 +130,13 @@ export function periodOptions(kind: PeriodKind, startYear: number): PeriodOption
   ];
 }
 
+/** Кезең күнін оқуға ыңғайлы етіп жазу (ай немесе апта) */
+export function isWeekPeriod(period: string) {
+  return !period.endsWith("-01") || mondayOf(period) === period;
+}
+
 export const PERIOD_KIND_LABELS: Record<PeriodKind, string> = {
+  week: "Апталық",
   month: "Айлық",
   quarter: "Тоқсандық",
   half: "Жартыжылдық",
