@@ -65,21 +65,18 @@ export function RatingAlert() {
     const myClass = classes.find((c) => c.name === myClassName);
     if (!myClass) return [];
 
-    const build = (
-      rows: { class_id: string; period: string }[],
-      points: (row: never) => number,
+    const build = <T extends { class_id: string; period: string }>(
+      rows: T[],
+      pointsOf: (row: T) => number,
       max: number,
       pct: (p: number, m: number) => number,
       kind: string,
     ): Warning | null => {
       if (rows.length === 0) return null;
       const last = rows.reduce((a, r) => (r.period > a ? r.period : a), rows[0]!.period);
-      const inPeriod = rows.filter((r) => r.period === last);
-      const list = inPeriod
-        .map((r) => ({
-          classId: r.class_id,
-          percent: pct(points(r as never), max),
-        }))
+      const list = rows
+        .filter((r) => r.period === last)
+        .map((r) => ({ classId: r.class_id, percent: pct(pointsOf(r), max) }))
         .sort((a, b) => b.percent - a.percent);
       if (list.length < 5) return null;
       const idx = list.findIndex((r) => r.classId === myClass.id);
@@ -92,7 +89,7 @@ export function RatingAlert() {
     const result: Warning[] = [];
     const teacher = build(
       scoresQuery.data ?? [],
-      (r: never) => totalPoints((r as unknown as ClassScoreRow).scores),
+      (r) => totalPoints(r.scores),
       MAX_TOTAL,
       percentOf,
       "Сынып жетекші рейтингі",
@@ -101,7 +98,7 @@ export function RatingAlert() {
 
     const klass = build(
       qualityQuery.data ?? [],
-      (r: never) => classTotalPoints((r as unknown as ClassQualityRow).scores),
+      (r) => classTotalPoints(r.scores),
       CLASS_MAX_TOTAL,
       classPercentOf,
       "Сынып рейтингі",
