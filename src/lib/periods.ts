@@ -1,4 +1,4 @@
-import { KZ_MONTHS } from "@/lib/metrics";
+import { KZ_MONTHS, formatPeriod } from "@/lib/metrics";
 
 /** Оқу жылы: қыркүйек (09) — мамыр (05) */
 export const ACADEMIC_MONTHS = [9, 10, 11, 12, 1, 2, 3, 4, 5] as const;
@@ -154,3 +154,8 @@ export const PERIOD_KIND_LABELS: Record<PeriodKind, string> = {
   half: "Жартыжылдық",
   year: "Жылдық",
 };
+
+/** Кезеңнің оқылатын атауы (ай немесе апта) */
+export function periodTitle(period: string) {
+  return isWeekPeriod(period) ? `Апта ${weekRangeLabel(period)}` : formatPeriod(period);
+}
