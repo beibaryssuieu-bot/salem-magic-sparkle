@@ -287,7 +287,7 @@ function RatingPage() {
                   <tr className="text-left text-muted-foreground">
                     <th className="py-2 font-medium">#</th>
                     <th className="py-2 font-medium">Сынып</th>
-                    <th className="py-2 text-right font-medium">Айлар</th>
+                    <th className="py-2 text-right font-medium">Кезеңдер</th>
                     <th className="py-2 text-right font-medium">Балл</th>
                     <th className="py-2 text-right font-medium">%</th>
                     <th className="py-2 text-right font-medium">Деңгей</th>
