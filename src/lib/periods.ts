@@ -142,9 +142,9 @@ export function periodOptions(kind: PeriodKind, startYear: number): PeriodOption
   ];
 }
 
-/** Кезең күнін оқуға ыңғайлы етіп жазу (ай немесе апта) */
+/** Кезең апталық па (айлық кезеңдер әрқашан «-01») */
 export function isWeekPeriod(period: string) {
-  return !period.endsWith("-01") || mondayOf(period) === period;
+  return !period.endsWith("-01");
 }
 
 export const PERIOD_KIND_LABELS: Record<PeriodKind, string> = {
