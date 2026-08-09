@@ -326,6 +326,9 @@ function AdminAttendanceView() {
             >
               Ағымдағы ай
             </Button>
+            <Button size="sm" onClick={exportMonth} disabled={monthRows.length === 0}>
+              <Download className="mr-2 size-4" /> Excel-ге жүктеу
+            </Button>
           </div>
 
           {monthAvg !== null && (
