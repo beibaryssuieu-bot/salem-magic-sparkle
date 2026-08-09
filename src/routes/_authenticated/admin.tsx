@@ -15,8 +15,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PeriodPicker } from "@/components/period-picker";
 import { useProfile, useSession } from "@/lib/auth";
-import { formatPeriod } from "@/lib/metrics";
+import { periodTitle } from "@/lib/periods";
 import {
   CRITERIA,
   GROUPS,
@@ -53,7 +54,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 function currentPeriod() {
   const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
 }
 
 function AdminPage() {
@@ -93,7 +94,7 @@ function AdminPage() {
 
   const classes = classesQuery.data ?? [];
   const activeClassId = classId || classes[0]?.id || "";
-  const periodDate = `${period}-01`;
+  const periodDate = period;
 
   useEffect(() => {
     const existing = (scoresQuery.data ?? []).find(
@@ -167,7 +168,7 @@ function AdminPage() {
       <div className="mx-auto w-full max-w-6xl px-4 py-8">
         <h1 className="font-display text-2xl font-bold md:text-3xl">Балдық мониторингті енгізу</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Сынып пен айды таңдап, әр критерий бойынша нәтижені белгілеңіз.
+          Сынып пен кезеңді (ай не апта) таңдап, әр критерий бойынша нәтижені белгілеңіз.
         </p>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[2fr_1fr]">
@@ -189,15 +190,7 @@ function AdminPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="period">Ай</Label>
-                  <Input
-                    id="period"
-                    type="month"
-                    value={period}
-                    onChange={(e) => setPeriod(e.target.value)}
-                  />
-                </div>
+                <PeriodPicker idPrefix="admin" value={period} onChange={setPeriod} />
               </div>
             </div>
 
@@ -329,7 +322,7 @@ function AdminPage() {
                   <li key={r.id} className="flex justify-between">
                     <span>{classes.find((c) => c.id === r.class_id)?.name ?? "—"}</span>
                     <span>
-                      {formatPeriod(r.period)} · {totalPoints(r.scores)} балл
+                      {periodTitle(r.period)} · {totalPoints(r.scores)} балл
                     </span>
                   </li>
                 ))}

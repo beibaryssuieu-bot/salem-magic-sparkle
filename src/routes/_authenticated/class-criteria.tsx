@@ -14,8 +14,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PeriodPicker } from "@/components/period-picker";
 import { useProfile, useSession } from "@/lib/auth";
-import { formatPeriod } from "@/lib/metrics";
+import { periodTitle } from "@/lib/periods";
 import { sortClassesByLiter } from "@/lib/utils";
 import {
   CLASS_CRITERIA,
@@ -51,7 +52,7 @@ export const Route = createFileRoute("/_authenticated/class-criteria")({
 
 function currentPeriod() {
   const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
 }
 
 function ClassCriteriaPage() {
@@ -93,7 +94,7 @@ function ClassCriteriaPage() {
     [classesQuery.data],
   );
   const activeClassId = classId || classes[0]?.id || "";
-  const periodDate = `${period}-01`;
+  const periodDate = period;
 
   useEffect(() => {
     const existing = (qualityQuery.data ?? []).find(
@@ -166,15 +167,7 @@ function ClassCriteriaPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="cc-period">Ай</Label>
-                <Input
-                  id="cc-period"
-                  type="month"
-                  value={period}
-                  onChange={(e) => setPeriod(e.target.value)}
-                />
-              </div>
+              <PeriodPicker idPrefix="cc" value={period} onChange={setPeriod} />
             </div>
           </div>
 
@@ -276,7 +269,7 @@ function ClassCriteriaPage() {
                 <li key={r.id} className="flex justify-between">
                   <span>{classes.find((c) => c.id === r.class_id)?.name ?? "—"}</span>
                   <span>
-                    {formatPeriod(r.period)} · {classTotalPoints(r.scores)} балл
+                    {periodTitle(r.period)} · {classTotalPoints(r.scores)} балл
                   </span>
                 </li>
               ))}

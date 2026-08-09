@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -210,6 +210,37 @@ function AdminAttendanceView() {
     return Math.round(withRows.reduce((s, r) => s + (r.percent ?? 0), 0) / withRows.length);
   })();
 
+  async function exportMonth() {
+    const XLSX = await import("xlsx");
+    const header = [
+      "Сынып",
+      ...monthDays.map((d) => String(d)),
+      "Күн саны",
+      "Барлығы",
+      "Келгені",
+      "Орташа %",
+    ];
+    const body = monthRows.map((r) => [
+      `${r.name} сынып`,
+      ...monthDays.map((d) => {
+        const iso = `${month}-${String(d).padStart(2, "0")}`;
+        const cell = monthCells.get(`${r.classId}|${iso}`);
+        if (!cell || cell.total_students === 0) return "";
+        return Math.round((cell.present_students / cell.total_students) * 100);
+      }),
+      r.days,
+      r.total,
+      r.present,
+      r.percent ?? "",
+    ]);
+    const sheet = XLSX.utils.aoa_to_sheet([header, ...body]);
+    sheet["!cols"] = [{ wch: 14 }, ...monthDays.map(() => ({ wch: 4 })), ...Array(4).fill({ wch: 10 })];
+    const book = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(book, sheet, "Қатысым");
+    XLSX.writeFile(book, `qatysym-${month}.xlsx`);
+    toast.success("Excel файлы жүктелді");
+  }
+
   return (
     <>
       <p className="mt-2 text-sm text-muted-foreground">
@@ -325,6 +356,9 @@ function AdminAttendanceView() {
               onClick={() => setMonth(new Date().toISOString().slice(0, 7))}
             >
               Ағымдағы ай
+            </Button>
+            <Button size="sm" onClick={exportMonth} disabled={monthRows.length === 0}>
+              <Download className="mr-2 size-4" /> Excel-ге жүктеу
             </Button>
           </div>
 

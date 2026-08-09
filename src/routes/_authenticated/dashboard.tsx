@@ -12,12 +12,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { RatingAlert } from "@/components/rating-alert";
 import { useProfile, useSession } from "@/lib/auth";
-import { formatPeriod } from "@/lib/metrics";
 import {
   DEFAULT_ACADEMIC_START_YEAR,
+  academicWeeks,
   academicYearOptions,
   academicYearPeriodList,
+  periodTitle,
 } from "@/lib/periods";
 import {
   CRITERIA,
@@ -94,7 +96,7 @@ function Dashboard() {
   const classRows = (scoresQuery.data ?? []).filter((r) => r.class_id === activeClassId);
 
   const allPeriods = useMemo(
-    () => academicYearPeriodList(Number(year)),
+    () => [...academicYearPeriodList(Number(year)), ...academicWeeks(Number(year))],
     [year],
   );
 
@@ -180,7 +182,7 @@ function Dashboard() {
               <SelectContent>
                 {allPeriods.map((p) => (
                   <SelectItem key={p} value={p}>
-                    {formatPeriod(p)}
+                    {periodTitle(p)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -194,10 +196,12 @@ function Dashboard() {
           </div>
         </div>
 
+        {!me?.isAdmin && <RatingAlert />}
+
         {!current ? (
           <div className="mt-10 rounded-2xl border border-dashed border-border p-10 text-center text-muted-foreground">
             {activePeriod
-              ? `${formatPeriod(activePeriod)} бойынша дерек енгізілмеген.`
+              ? `${periodTitle(activePeriod)} бойынша дерек енгізілмеген.`
               : "Бұл сынып бойынша әзірге балл енгізілмеген."}
           </div>
         ) : (
@@ -205,7 +209,7 @@ function Dashboard() {
             <section className="mt-8 rounded-3xl panel-dark p-6 md:p-8">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h2 className="font-display text-lg font-bold">
-                  {activeClass?.name} сынып · {formatPeriod(current.period)}
+                  {activeClass?.name} сынып · {periodTitle(current.period)}
                 </h2>
                 <span className="rounded-full bg-white/10 px-3 py-1 text-xs">
                   Жалпы: {total} балл / {MAX_TOTAL} балл — {percent}% ({levelLabel(percent)})
