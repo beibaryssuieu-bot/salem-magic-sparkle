@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { AttendanceGrid, type GridCell } from "@/components/attendance-grid";
 import { useProfile, useSession } from "@/lib/auth";
+import { mondayOf } from "@/lib/periods";
 import { sortClassesByLiter } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/attendance")({
@@ -17,7 +19,7 @@ export const Route = createFileRoute("/_authenticated/attendance")({
       { title: "Қатысым — TÄRBIE OS" },
       {
         name: "description",
-        content: "Сыныптардың күнделікті сабаққа қатысу мониторингі.",
+        content: "Сыныптардың күнделікті, апталық және айлық сабаққа қатысу мониторингі.",
       },
       { property: "og:title", content: "Қатысым — TÄRBIE OS" },
       {
@@ -44,6 +46,63 @@ function shiftDay(iso: string, delta: number) {
   const d = new Date(iso + "T12:00:00");
   d.setDate(d.getDate() + delta);
   return d.toISOString().slice(0, 10);
+}
+
+function shiftMonth(month: string, delta: number) {
+  const y = Number(month.slice(0, 4));
+  const m = Number(month.slice(5, 7));
+  const d = new Date(y, m - 1 + delta, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function monthBounds(month: string) {
+  const y = Number(month.slice(0, 4));
+  const m = Number(month.slice(5, 7));
+  const endDate = new Date(y, m, 0);
+  return {
+    start: `${month}-01`,
+    end: `${month}-${String(endDate.getDate()).padStart(2, "0")}`,
+    dayCount: endDate.getDate(),
+  };
+}
+
+const WEEK_LABELS = ["Дүйсенбі", "Сейсенбі", "Сәрсенбі", "Бейсенбі", "Жұма"];
+
+function weekDays(monday: string) {
+  return Array.from({ length: 5 }, (_, i) => shiftDay(monday, i));
+}
+
+function shortDate(iso: string) {
+  return `${iso.slice(8, 10)}.${iso.slice(5, 7)}`;
+}
+
+function toCells(rows: AttendanceRow[]) {
+  const map = new Map<string, GridCell>();
+  for (const r of rows) {
+    map.set(`${r.class_id}|${r.day}`, {
+      present: r.present_students,
+      total: r.total_students,
+    });
+  }
+  return map;
+}
+
+function useRangeAttendance(from: string, to: string, enabled: boolean, classId?: string) {
+  return useQuery({
+    queryKey: ["attendance-range", from, to, classId ?? "all"],
+    enabled,
+    queryFn: async () => {
+      let q = supabase
+        .from("attendance")
+        .select("id, class_id, day, total_students, present_students, comment")
+        .gte("day", from)
+        .lte("day", to);
+      if (classId) q = q.eq("class_id", classId);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data ?? []) as AttendanceRow[];
+    },
+  });
 }
 
 function DayPicker({ day, onChange }: { day: string; onChange: (d: string) => void }) {
@@ -86,25 +145,89 @@ function DayPicker({ day, onChange }: { day: string; onChange: (d: string) => vo
   );
 }
 
-function shiftMonth(month: string, delta: number) {
-  const y = Number(month.slice(0, 4));
-  const m = Number(month.slice(5, 7));
-  const d = new Date(y, m - 1 + delta, 1);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+function WeekNav({ monday, onChange }: { monday: string; onChange: (m: string) => void }) {
+  const days = weekDays(monday);
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <Button variant="outline" size="icon" onClick={() => onChange(shiftDay(monday, -7))}>
+        <ChevronLeft className="size-4" />
+      </Button>
+      <span className="text-sm font-medium">
+        {shortDate(days[0])} – {shortDate(days[4])}
+      </span>
+      <Button variant="outline" size="icon" onClick={() => onChange(shiftDay(monday, 7))}>
+        <ChevronRight className="size-4" />
+      </Button>
+      <Button
+        variant="secondary"
+        size="sm"
+        onClick={() => onChange(mondayOf(new Date().toISOString().slice(0, 10)))}
+      >
+        Ағымдағы апта
+      </Button>
+    </div>
+  );
 }
 
-function monthBounds(month: string) {
-  const y = Number(month.slice(0, 4));
-  const m = Number(month.slice(5, 7));
-  const start = `${month}-01`;
-  const endDate = new Date(y, m, 0);
-  const end = `${month}-${String(endDate.getDate()).padStart(2, "0")}`;
-  return { start, end };
+function MonthNav({ month, onChange }: { month: string; onChange: (m: string) => void }) {
+  return (
+    <div className="flex flex-wrap items-end gap-3">
+      <Button variant="outline" size="icon" onClick={() => onChange(shiftMonth(month, -1))}>
+        <ChevronLeft className="size-4" />
+      </Button>
+      <div className="space-y-1">
+        <Label htmlFor="att-month">Ай</Label>
+        <Input
+          id="att-month"
+          type="month"
+          value={month}
+          onChange={(e) => e.target.value && onChange(e.target.value)}
+          className="w-44"
+        />
+      </div>
+      <Button variant="outline" size="icon" onClick={() => onChange(shiftMonth(month, 1))}>
+        <ChevronRight className="size-4" />
+      </Button>
+      <Button
+        variant="secondary"
+        size="sm"
+        onClick={() => onChange(new Date().toISOString().slice(0, 7))}
+      >
+        Ағымдағы ай
+      </Button>
+    </div>
+  );
+}
+
+function ModeSwitch({
+  mode,
+  onChange,
+  items,
+}: {
+  mode: string;
+  onChange: (m: string) => void;
+  items: { value: string; label: string }[];
+}) {
+  return (
+    <div className="inline-flex rounded-xl border border-border bg-card p-1">
+      {items.map((i) => (
+        <Button
+          key={i.value}
+          variant={mode === i.value ? "default" : "ghost"}
+          size="sm"
+          onClick={() => onChange(i.value)}
+        >
+          {i.label}
+        </Button>
+      ))}
+    </div>
+  );
 }
 
 function AdminAttendanceView() {
-  const [mode, setMode] = useState<"day" | "month">("day");
+  const [mode, setMode] = useState<"day" | "week" | "month">("day");
   const [day, setDay] = useState(new Date().toISOString().slice(0, 10));
+  const [monday, setMonday] = useState(mondayOf(new Date().toISOString().slice(0, 10)));
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
 
   const classesQuery = useQuery({
@@ -116,86 +239,36 @@ function AdminAttendanceView() {
     },
   });
 
-  const attendanceQuery = useQuery({
-    queryKey: ["attendance", day],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("attendance")
-        .select("id, class_id, day, total_students, present_students, comment")
-        .eq("day", day);
-      if (error) throw error;
-      return (data ?? []) as AttendanceRow[];
-    },
-  });
-
-  const monthQuery = useQuery({
-    queryKey: ["attendance-month", month],
-    enabled: mode === "month",
-    queryFn: async () => {
-      const { start, end } = monthBounds(month);
-      const { data, error } = await supabase
-        .from("attendance")
-        .select("id, class_id, day, total_students, present_students, comment")
-        .gte("day", start)
-        .lte("day", end);
-      if (error) throw error;
-      return (data ?? []) as AttendanceRow[];
-    },
-  });
-
   const classes = useMemo(
     () => sortClassesByLiter(classesQuery.data ?? []),
     [classesQuery.data],
   );
 
-  const monthDays = useMemo(() => {
-    const y = Number(month.slice(0, 4));
-    const m = Number(month.slice(5, 7));
-    const count = new Date(y, m, 0).getDate();
-    return Array.from({ length: count }, (_, i) => i + 1);
-  }, [month]);
+  const dayQuery = useRangeAttendance(day, day, mode === "day");
+  const week = weekDays(monday);
+  const weekQuery = useRangeAttendance(week[0], week[4], mode === "week");
+  const bounds = monthBounds(month);
+  const monthQuery = useRangeAttendance(bounds.start, bounds.end, mode === "month");
 
-  const monthCells = useMemo(() => {
-    const map = new Map<string, AttendanceRow>();
-    for (const r of monthQuery.data ?? []) map.set(`${r.class_id}|${r.day}`, r);
-    return map;
-  }, [monthQuery.data]);
-
-  const monthRows = useMemo(() => {
-    const byClass = new Map<string, AttendanceRow[]>();
-    for (const r of monthQuery.data ?? []) {
-      const list = byClass.get(r.class_id) ?? [];
-      list.push(r);
-      byClass.set(r.class_id, list);
-    }
-    return classes.map((c) => {
-      const list = byClass.get(c.id) ?? [];
-      const total = list.reduce((s2, r) => s2 + r.total_students, 0);
-      const present = list.reduce((s2, r) => s2 + r.present_students, 0);
-      return {
-        classId: c.id,
-        name: c.name,
-        days: list.length,
-        total,
-        present,
-        percent: total > 0 ? Math.round((present / total) * 100) : null,
-      };
-    });
-  }, [monthQuery.data, classes]);
-
-
+  const dayRows = dayQuery.data ?? [];
   const byClass = useMemo(() => {
     const map = new Map<string, AttendanceRow>();
-    for (const r of attendanceQuery.data ?? []) map.set(r.class_id, r);
+    for (const r of dayRows) map.set(r.class_id, r);
     return map;
-  }, [attendanceQuery.data]);
+  }, [dayRows]);
 
   const rows = classes.map((c) => {
     const r = byClass.get(c.id);
     const total = r?.total_students ?? 0;
     const present = r?.present_students ?? 0;
-    const percent = total > 0 ? Math.round((present / total) * 100) : null;
-    return { classId: c.id, name: c.name, total, present, percent, comment: r?.comment ?? null };
+    return {
+      classId: c.id,
+      name: c.name,
+      total,
+      present,
+      percent: total > 0 ? Math.round((present / total) * 100) : null,
+      comment: r?.comment ?? null,
+    };
   });
 
   const withData = rows.filter((r) => r.total > 0);
@@ -204,67 +277,30 @@ function AdminAttendanceView() {
       ? Math.round(withData.reduce((s, r) => s + (r.percent ?? 0), 0) / withData.length)
       : null;
 
-  const monthAvg = (() => {
-    const withRows = monthRows.filter((r) => r.total > 0);
-    if (withRows.length === 0) return null;
-    return Math.round(withRows.reduce((s, r) => s + (r.percent ?? 0), 0) / withRows.length);
-  })();
-
-  async function exportMonth() {
-    const XLSX = await import("xlsx");
-    const header = [
-      "Сынып",
-      ...monthDays.map((d) => String(d)),
-      "Күн саны",
-      "Барлығы",
-      "Келгені",
-      "Орташа %",
-    ];
-    const body = monthRows.map((r) => [
-      `${r.name} сынып`,
-      ...monthDays.map((d) => {
-        const iso = `${month}-${String(d).padStart(2, "0")}`;
-        const cell = monthCells.get(`${r.classId}|${iso}`);
-        if (!cell || cell.total_students === 0) return "";
-        return Math.round((cell.present_students / cell.total_students) * 100);
-      }),
-      r.days,
-      r.total,
-      r.present,
-      r.percent ?? "",
-    ]);
-    const sheet = XLSX.utils.aoa_to_sheet([header, ...body]);
-    sheet["!cols"] = [{ wch: 14 }, ...monthDays.map(() => ({ wch: 4 })), ...Array(4).fill({ wch: 10 })];
-    const book = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(book, sheet, "Қатысым");
-    XLSX.writeFile(book, `qatysym-${month}.xlsx`);
-    toast.success("Excel файлы жүктелді");
-  }
+  const monthDays = Array.from(
+    { length: bounds.dayCount },
+    (_, i) => `${month}-${String(i + 1).padStart(2, "0")}`,
+  );
 
   return (
     <>
       <p className="mt-2 text-sm text-muted-foreground">
-        Барлық сыныптардың қатысу деректерін күн және ай бойынша бақылаңыз.
+        Барлық сыныптардың қатысу деректерін күн, апта және ай бойынша бақылаңыз.
       </p>
 
-      <div className="mt-6 inline-flex rounded-xl border border-border bg-card p-1">
-        <Button
-          variant={mode === "day" ? "default" : "ghost"}
-          size="sm"
-          onClick={() => setMode("day")}
-        >
-          Күндік
-        </Button>
-        <Button
-          variant={mode === "month" ? "default" : "ghost"}
-          size="sm"
-          onClick={() => setMode("month")}
-        >
-          Айлық
-        </Button>
+      <div className="mt-6">
+        <ModeSwitch
+          mode={mode}
+          onChange={(m) => setMode(m as typeof mode)}
+          items={[
+            { value: "day", label: "Күндік" },
+            { value: "week", label: "Апталық" },
+            { value: "month", label: "Айлық" },
+          ]}
+        />
       </div>
 
-      {mode === "day" ? (
+      {mode === "day" && (
         <>
           <div className="mt-6">
             <DayPicker day={day} onChange={setDay} />
@@ -277,159 +313,34 @@ function AdminAttendanceView() {
             </p>
           )}
 
-
-      <section className="mt-6 rounded-2xl border border-border bg-card p-6">
-        {classes.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Сыныптар тізімі жүктелуде…</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-muted-foreground">
-                  <th className="py-2 font-medium">Сынып</th>
-                  <th className="py-2 text-right font-medium">Келгені</th>
-                  <th className="py-2 text-right font-medium">Қатысу %</th>
-                  <th className="py-2 font-medium">Ескертпе</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r) => (
-                  <tr key={r.classId} className="border-t border-border/60">
-                    <td className="py-2.5 pr-3 font-medium">{r.name} сынып</td>
-                    <td className="py-2.5 text-right">
-                      {r.total > 0 ? (
-                        <span>
-                          {r.present}/{r.total}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </td>
-                    <td className="py-2.5 text-right">
-                      {r.percent !== null ? (
-                        <span
-                          className={
-                            r.percent >= 90
-                              ? "font-semibold text-primary"
-                              : r.percent >= 75
-                                ? "font-semibold"
-                                : "font-semibold text-destructive"
-                          }
-                        >
-                          {r.percent}%
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </td>
-                    <td className="py-2.5 pl-3 text-muted-foreground">{r.comment ?? "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-        </>
-      ) : (
-        <>
-          <div className="mt-6 flex flex-wrap items-end gap-3">
-            <Button variant="outline" size="icon" onClick={() => setMonth(shiftMonth(month, -1))}>
-              <ChevronLeft className="size-4" />
-            </Button>
-            <div className="space-y-1">
-              <Label htmlFor="att-month">Ай</Label>
-              <Input
-                id="att-month"
-                type="month"
-                value={month}
-                onChange={(e) => setMonth(e.target.value)}
-                className="w-44"
-              />
-            </div>
-            <Button variant="outline" size="icon" onClick={() => setMonth(shiftMonth(month, 1))}>
-              <ChevronRight className="size-4" />
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setMonth(new Date().toISOString().slice(0, 7))}
-            >
-              Ағымдағы ай
-            </Button>
-            <Button size="sm" onClick={exportMonth} disabled={monthRows.length === 0}>
-              <Download className="mr-2 size-4" /> Excel-ге жүктеу
-            </Button>
-          </div>
-
-          {monthAvg !== null && (
-            <p className="mt-4 rounded-xl border border-border bg-secondary/40 px-4 py-3 text-sm">
-              Ай бойынша орташа қатысу:{" "}
-              <span className="font-semibold">{monthAvg}%</span>
-            </p>
-          )}
-
-          <section className="mt-6 rounded-2xl border border-border bg-card p-4">
+          <section className="mt-6 rounded-2xl border border-border bg-card p-6">
             {classes.length === 0 ? (
               <p className="text-sm text-muted-foreground">Сыныптар тізімі жүктелуде…</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-max min-w-full border-separate border-spacing-0 text-xs">
+                <table className="w-full text-sm">
                   <thead>
-                    <tr>
-                      <th className="sticky left-0 z-10 bg-card px-2 py-2 text-left font-medium text-muted-foreground">
-                        Сынып
-                      </th>
-                      {monthDays.map((d) => (
-                        <th
-                          key={d}
-                          className="w-9 px-1 py-2 text-center font-medium text-muted-foreground"
-                        >
-                          {d}
-                        </th>
-                      ))}
-                      <th className="px-2 py-2 text-right font-medium text-muted-foreground">
-                        Орташа
-                      </th>
+                    <tr className="text-left text-muted-foreground">
+                      <th className="py-2 font-medium">Сынып</th>
+                      <th className="py-2 text-right font-medium">Келгені</th>
+                      <th className="py-2 text-right font-medium">Қатысу %</th>
+                      <th className="py-2 font-medium">Ескертпе</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {monthRows.map((r) => (
-                      <tr key={r.classId}>
-                        <td className="sticky left-0 z-10 whitespace-nowrap border-t border-border/60 bg-card px-2 py-1.5 font-medium">
-                          {r.name}
+                    {rows.map((r) => (
+                      <tr key={r.classId} className="border-t border-border/60">
+                        <td className="py-2.5 pr-3 font-medium">{r.name} сынып</td>
+                        <td className="py-2.5 text-right">
+                          {r.total > 0 ? (
+                            <span>
+                              {r.present}/{r.total}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
                         </td>
-                        {monthDays.map((d) => {
-                          const iso = `${month}-${String(d).padStart(2, "0")}`;
-                          const cell = monthCells.get(`${r.classId}|${iso}`);
-                          const pct =
-                            cell && cell.total_students > 0
-                              ? Math.round((cell.present_students / cell.total_students) * 100)
-                              : null;
-                          return (
-                            <td
-                              key={d}
-                              title={
-                                cell
-                                  ? `${r.name} · ${iso} · ${cell.present_students}/${cell.total_students}${cell.comment ? ` · ${cell.comment}` : ""}`
-                                  : `${r.name} · ${iso} · дерек жоқ`
-                              }
-                              className={
-                                "border-t border-border/60 px-1 py-1.5 text-center tabular-nums " +
-                                (pct === null
-                                  ? "text-muted-foreground/50"
-                                  : pct >= 90
-                                    ? "font-semibold text-primary"
-                                    : pct >= 75
-                                      ? "font-semibold"
-                                      : "font-semibold text-destructive")
-                              }
-                            >
-                              {pct === null ? "—" : pct}
-                            </td>
-                          );
-                        })}
-                        <td className="border-t border-border/60 px-2 py-1.5 text-right">
+                        <td className="py-2.5 text-right">
                           {r.percent !== null ? (
                             <span
                               className={
@@ -446,18 +357,52 @@ function AdminAttendanceView() {
                             <span className="text-muted-foreground">—</span>
                           )}
                         </td>
+                        <td className="py-2.5 pl-3 text-muted-foreground">{r.comment ?? "—"}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             )}
-            <p className="mt-3 text-xs text-muted-foreground">
-              Ұяшықтағы сан — сол күнгі қатысу пайызы. «—» деген белгі дерек енгізілмегенін
-              білдіреді.
-            </p>
           </section>
+        </>
+      )}
 
+      {mode === "week" && (
+        <>
+          <div className="mt-6">
+            <WeekNav monday={monday} onChange={setMonday} />
+          </div>
+          <section className="mt-6 rounded-2xl border border-border bg-card p-4">
+            <AttendanceGrid
+              classes={classes}
+              days={week}
+              dayLabels={WEEK_LABELS.map((l, i) => `${l} (${shortDate(week[i])})`)}
+              cells={toCells(weekQuery.data ?? [])}
+              totalLabel="Апталық жалпы"
+              fileName={`qatysym-apta-${monday}.xlsx`}
+              emptyText="Сыныптар тізімі жүктелуде…"
+            />
+          </section>
+        </>
+      )}
+
+      {mode === "month" && (
+        <>
+          <div className="mt-6">
+            <MonthNav month={month} onChange={setMonth} />
+          </div>
+          <section className="mt-6 rounded-2xl border border-border bg-card p-4">
+            <AttendanceGrid
+              classes={classes}
+              days={monthDays}
+              dayLabels={monthDays.map((d) => String(Number(d.slice(8, 10))))}
+              cells={toCells(monthQuery.data ?? [])}
+              totalLabel="Айлық жалпы"
+              fileName={`qatysym-${month}.xlsx`}
+              emptyText="Сыныптар тізімі жүктелуде…"
+            />
+          </section>
         </>
       )}
     </>
@@ -473,6 +418,9 @@ function TeacherAttendanceView() {
   const [total, setTotal] = useState(0);
   const [present, setPresent] = useState(0);
   const [comment, setComment] = useState("");
+  const [mode, setMode] = useState<"week" | "month">("week");
+  const [monday, setMonday] = useState(mondayOf(new Date().toISOString().slice(0, 10)));
+  const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
 
   const classesQuery = useQuery({
     queryKey: ["classes"],
@@ -503,6 +451,16 @@ function TeacherAttendanceView() {
     },
   });
 
+  const week = weekDays(monday);
+  const bounds = monthBounds(month);
+  const weekQuery = useRangeAttendance(week[0], week[4], !!myClass && mode === "week", myClass?.id);
+  const monthQuery = useRangeAttendance(
+    bounds.start,
+    bounds.end,
+    !!myClass && mode === "month",
+    myClass?.id,
+  );
+
   useEffect(() => {
     const existing = (attendanceQuery.data ?? []).find((r) => r.day === day);
     setTotal(existing?.total_students ?? 0);
@@ -528,6 +486,7 @@ function TeacherAttendanceView() {
     onSuccess: () => {
       toast.success("Қатысым сақталды");
       queryClient.invalidateQueries({ queryKey: ["attendance"] });
+      queryClient.invalidateQueries({ queryKey: ["attendance-range"] });
     },
     onError: () => toast.error("Сақтау сәтсіз аяқталды"),
   });
@@ -540,10 +499,16 @@ function TeacherAttendanceView() {
   if (!myClass) {
     return (
       <div className="mt-10 rounded-2xl border border-dashed border-border p-10 text-center text-muted-foreground">
-        Сізге сынып тағайындалмаған. Әкімшiden профильде сыныпты көрсетуді сұраңыз.
+        Сізге сынып тағайындалмаған. Әкімшіден профильде сыныпты көрсетуді сұраңыз.
       </div>
     );
   }
+
+  const monthDays = Array.from(
+    { length: bounds.dayCount },
+    (_, i) => `${month}-${String(i + 1).padStart(2, "0")}`,
+  );
+  const gridClasses = [{ id: myClass.id, name: myClass.name }];
 
   return (
     <>
@@ -652,6 +617,50 @@ function TeacherAttendanceView() {
           )}
         </section>
       </div>
+
+      <section className="mt-6 rounded-2xl border border-border bg-card p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-2 pb-3">
+          <h2 className="font-display font-bold">
+            {myClass.name} сыныбының қатысым кестесі
+          </h2>
+          <ModeSwitch
+            mode={mode}
+            onChange={(m) => setMode(m as typeof mode)}
+            items={[
+              { value: "week", label: "Апталық" },
+              { value: "month", label: "Айлық" },
+            ]}
+          />
+        </div>
+
+        <div className="px-2 pb-4">
+          {mode === "week" ? (
+            <WeekNav monday={monday} onChange={setMonday} />
+          ) : (
+            <MonthNav month={month} onChange={setMonth} />
+          )}
+        </div>
+
+        {mode === "week" ? (
+          <AttendanceGrid
+            classes={gridClasses}
+            days={week}
+            dayLabels={WEEK_LABELS.map((l, i) => `${l} (${shortDate(week[i])})`)}
+            cells={toCells(weekQuery.data ?? [])}
+            totalLabel="Апталық жалпы"
+            fileName={`qatysym-${myClass.name}-apta-${monday}.xlsx`}
+          />
+        ) : (
+          <AttendanceGrid
+            classes={gridClasses}
+            days={monthDays}
+            dayLabels={monthDays.map((d) => String(Number(d.slice(8, 10))))}
+            cells={toCells(monthQuery.data ?? [])}
+            totalLabel="Айлық жалпы"
+            fileName={`qatysym-${myClass.name}-${month}.xlsx`}
+          />
+        )}
+      </section>
     </>
   );
 }
