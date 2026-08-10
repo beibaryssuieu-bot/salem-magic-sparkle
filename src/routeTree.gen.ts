@@ -21,6 +21,7 @@ import { Route as AuthenticatedEventsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedPasswordRouteImport } from './routes/_authenticated/password'
 import { Route as AuthenticatedRatingRouteImport } from './routes/_authenticated/rating'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiPublicSeedRosterRouteImport } from './routes/api/public/seed-roster'
 
 const IndexRoute = IndexRouteImport.update({
@@ -83,6 +84,11 @@ const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSeedRosterRoute = ApiPublicSeedRosterRouteImport.update({
   id: '/api/public/seed-roster',
   path: '/api/public/seed-roster',
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/password': typeof AuthenticatedPasswordRoute
   '/rating': typeof AuthenticatedRatingRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/api/chat': typeof ApiChatRoute
   '/api/public/seed-roster': typeof ApiPublicSeedRosterRoute
 }
 export interface FileRoutesByTo {
@@ -115,6 +122,7 @@ export interface FileRoutesByTo {
   '/password': typeof AuthenticatedPasswordRoute
   '/rating': typeof AuthenticatedRatingRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/api/chat': typeof ApiChatRoute
   '/api/public/seed-roster': typeof ApiPublicSeedRosterRoute
 }
 export interface FileRoutesById {
@@ -131,6 +139,7 @@ export interface FileRoutesById {
   '/_authenticated/password': typeof AuthenticatedPasswordRoute
   '/_authenticated/rating': typeof AuthenticatedRatingRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
+  '/api/chat': typeof ApiChatRoute
   '/api/public/seed-roster': typeof ApiPublicSeedRosterRoute
 }
 export interface FileRouteTypes {
@@ -147,6 +156,7 @@ export interface FileRouteTypes {
     | '/password'
     | '/rating'
     | '/reports'
+    | '/api/chat'
     | '/api/public/seed-roster'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/password'
     | '/rating'
     | '/reports'
+    | '/api/chat'
     | '/api/public/seed-roster'
   id:
     | '__root__'
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
     | '/_authenticated/password'
     | '/_authenticated/rating'
     | '/_authenticated/reports'
+    | '/api/chat'
     | '/api/public/seed-roster'
   fileRoutesById: FileRoutesById
 }
@@ -183,6 +195,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiChatRoute: typeof ApiChatRoute
   ApiPublicSeedRosterRoute: typeof ApiPublicSeedRosterRoute
 }
 
@@ -272,6 +285,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReportsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/seed-roster': {
       id: '/api/public/seed-roster'
       path: '/api/public/seed-roster'
@@ -313,6 +333,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiChatRoute: ApiChatRoute,
   ApiPublicSeedRosterRoute: ApiPublicSeedRosterRoute,
 }
 export const routeTree = rootRouteImport
