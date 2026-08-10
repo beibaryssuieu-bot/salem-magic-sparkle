@@ -68,8 +68,14 @@ function monthBounds(month: string) {
 
 const WEEK_LABELS = ["Дүйсенбі", "Сейсенбі", "Сәрсенбі", "Бейсенбі", "Жұма"];
 
-function weekDays(monday: string) {
-  return Array.from({ length: 5 }, (_, i) => shiftDay(monday, i));
+function weekDays(monday: string): [string, string, string, string, string] {
+  return [0, 1, 2, 3, 4].map((i) => shiftDay(monday, i)) as [
+    string,
+    string,
+    string,
+    string,
+    string,
+  ];
 }
 
 function shortDate(iso: string) {
@@ -377,7 +383,7 @@ function AdminAttendanceView() {
             <AttendanceGrid
               classes={classes}
               days={week}
-              dayLabels={WEEK_LABELS.map((l, i) => `${l} (${shortDate(week[i])})`)}
+              dayLabels={WEEK_LABELS.map((l, i) => `${l} (${shortDate(week[i] ?? "")})`)}
               cells={toCells(weekQuery.data ?? [])}
               totalLabel="Апталық жалпы"
               fileName={`qatysym-apta-${monday}.xlsx`}
@@ -645,7 +651,7 @@ function TeacherAttendanceView() {
           <AttendanceGrid
             classes={gridClasses}
             days={week}
-            dayLabels={WEEK_LABELS.map((l, i) => `${l} (${shortDate(week[i])})`)}
+            dayLabels={WEEK_LABELS.map((l, i) => `${l} (${shortDate(week[i] ?? "")})`)}
             cells={toCells(weekQuery.data ?? [])}
             totalLabel="Апталық жалпы"
             fileName={`qatysym-${myClass.name}-apta-${monday}.xlsx`}
