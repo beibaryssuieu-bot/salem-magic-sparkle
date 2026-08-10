@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedAssistantRouteImport } from './routes/_authenticated/assistant'
 import { Route as AuthenticatedAttendanceRouteImport } from './routes/_authenticated/attendance'
 import { Route as AuthenticatedClassCriteriaRouteImport } from './routes/_authenticated/class-criteria'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -21,6 +22,7 @@ import { Route as AuthenticatedEventsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedPasswordRouteImport } from './routes/_authenticated/password'
 import { Route as AuthenticatedRatingRouteImport } from './routes/_authenticated/rating'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiPublicSeedRosterRouteImport } from './routes/api/public/seed-roster'
 
 const IndexRoute = IndexRouteImport.update({
@@ -40,6 +42,11 @@ const AuthRoute = AuthRouteImport.update({
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAssistantRoute = AuthenticatedAssistantRouteImport.update({
+  id: '/assistant',
+  path: '/assistant',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAttendanceRoute = AuthenticatedAttendanceRouteImport.update({
@@ -83,6 +90,11 @@ const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSeedRosterRoute = ApiPublicSeedRosterRouteImport.update({
   id: '/api/public/seed-roster',
   path: '/api/public/seed-roster',
@@ -93,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/assistant': typeof AuthenticatedAssistantRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
   '/class-criteria': typeof AuthenticatedClassCriteriaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -101,12 +114,14 @@ export interface FileRoutesByFullPath {
   '/password': typeof AuthenticatedPasswordRoute
   '/rating': typeof AuthenticatedRatingRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/api/chat': typeof ApiChatRoute
   '/api/public/seed-roster': typeof ApiPublicSeedRosterRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/assistant': typeof AuthenticatedAssistantRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
   '/class-criteria': typeof AuthenticatedClassCriteriaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -115,6 +130,7 @@ export interface FileRoutesByTo {
   '/password': typeof AuthenticatedPasswordRoute
   '/rating': typeof AuthenticatedRatingRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/api/chat': typeof ApiChatRoute
   '/api/public/seed-roster': typeof ApiPublicSeedRosterRoute
 }
 export interface FileRoutesById {
@@ -123,6 +139,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/assistant': typeof AuthenticatedAssistantRoute
   '/_authenticated/attendance': typeof AuthenticatedAttendanceRoute
   '/_authenticated/class-criteria': typeof AuthenticatedClassCriteriaRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -131,6 +148,7 @@ export interface FileRoutesById {
   '/_authenticated/password': typeof AuthenticatedPasswordRoute
   '/_authenticated/rating': typeof AuthenticatedRatingRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
+  '/api/chat': typeof ApiChatRoute
   '/api/public/seed-roster': typeof ApiPublicSeedRosterRoute
 }
 export interface FileRouteTypes {
@@ -139,6 +157,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/admin'
+    | '/assistant'
     | '/attendance'
     | '/class-criteria'
     | '/dashboard'
@@ -147,12 +166,14 @@ export interface FileRouteTypes {
     | '/password'
     | '/rating'
     | '/reports'
+    | '/api/chat'
     | '/api/public/seed-roster'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/admin'
+    | '/assistant'
     | '/attendance'
     | '/class-criteria'
     | '/dashboard'
@@ -161,6 +182,7 @@ export interface FileRouteTypes {
     | '/password'
     | '/rating'
     | '/reports'
+    | '/api/chat'
     | '/api/public/seed-roster'
   id:
     | '__root__'
@@ -168,6 +190,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/admin'
+    | '/_authenticated/assistant'
     | '/_authenticated/attendance'
     | '/_authenticated/class-criteria'
     | '/_authenticated/dashboard'
@@ -176,6 +199,7 @@ export interface FileRouteTypes {
     | '/_authenticated/password'
     | '/_authenticated/rating'
     | '/_authenticated/reports'
+    | '/api/chat'
     | '/api/public/seed-roster'
   fileRoutesById: FileRoutesById
 }
@@ -183,6 +207,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiChatRoute: typeof ApiChatRoute
   ApiPublicSeedRosterRoute: typeof ApiPublicSeedRosterRoute
 }
 
@@ -214,6 +239,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/assistant': {
+      id: '/_authenticated/assistant'
+      path: '/assistant'
+      fullPath: '/assistant'
+      preLoaderRoute: typeof AuthenticatedAssistantRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/attendance': {
@@ -272,6 +304,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReportsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/seed-roster': {
       id: '/api/public/seed-roster'
       path: '/api/public/seed-roster'
@@ -284,6 +323,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAssistantRoute: typeof AuthenticatedAssistantRoute
   AuthenticatedAttendanceRoute: typeof AuthenticatedAttendanceRoute
   AuthenticatedClassCriteriaRoute: typeof AuthenticatedClassCriteriaRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -296,6 +336,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAssistantRoute: AuthenticatedAssistantRoute,
   AuthenticatedAttendanceRoute: AuthenticatedAttendanceRoute,
   AuthenticatedClassCriteriaRoute: AuthenticatedClassCriteriaRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
@@ -313,18 +354,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiChatRoute: ApiChatRoute,
   ApiPublicSeedRosterRoute: ApiPublicSeedRosterRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -1,6 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
+  Bot,
   CalendarDays,
   ClipboardCheck,
   FolderUp,
@@ -39,6 +40,7 @@ const items = [
   { title: "EduQor", url: "/eduqor", icon: Library },
   { title: "Іс-шаралар", url: "/events", icon: CalendarDays },
   { title: "Қатысым", url: "/attendance", icon: ClipboardCheck },
+  { title: "ЖИ көмекші", url: "/assistant", icon: Bot },
   { title: "Парольді өзгерту", url: "/password", icon: KeyRound },
 ] as const;
 
