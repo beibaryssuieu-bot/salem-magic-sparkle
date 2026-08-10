@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RatingAlert } from "@/components/rating-alert";
+import { ClassMonitoring } from "@/components/class-monitoring";
 import { useProfile, useSession } from "@/lib/auth";
 import {
   DEFAULT_ACADEMIC_START_YEAR,
@@ -61,6 +62,7 @@ function Dashboard() {
   const [classId, setClassId] = useState<string>("");
   const [year, setYear] = useState(String(DEFAULT_ACADEMIC_START_YEAR));
   const [period, setPeriod] = useState<string>("");
+  const [tab, setTab] = useState<"personal" | "class">("personal");
 
   const classesQuery = useQuery({
     queryKey: ["classes"],
@@ -198,7 +200,26 @@ function Dashboard() {
 
         {!me?.isAdmin && <RatingAlert />}
 
-        {!current ? (
+        <div className="mt-6 inline-flex rounded-xl border border-border bg-card p-1">
+          <Button
+            variant={tab === "personal" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setTab("personal")}
+          >
+            Жеке мониторинг
+          </Button>
+          <Button
+            variant={tab === "class" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setTab("class")}
+          >
+            Сынып мониторингі
+          </Button>
+        </div>
+
+        {tab === "class" ? (
+          <ClassMonitoring />
+        ) : !current ? (
           <div className="mt-10 rounded-2xl border border-dashed border-border p-10 text-center text-muted-foreground">
             {activePeriod
               ? `${periodTitle(activePeriod)} бойынша дерек енгізілмеген.`
