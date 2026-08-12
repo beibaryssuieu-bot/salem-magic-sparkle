@@ -138,8 +138,8 @@ function Chat({
     onError: (error) => {
       const raw = error?.message?.trim();
       const message =
-        raw === "Missing LOVABLE_API_KEY"
-          ? "ЖИ көмекші қосылмаған: Lovable AI кілті орнатылмаған. Әкімші Lovable жобасында AI Gateway-ді қосуы керек."
+        raw === "Missing GOOGLE_GENERATIVE_AI_API_KEY"
+          ? "ЖИ көмекші қосылмаған: Google AI кілті орнатылмаған. Әкімші Lovable жобасының Environment Variables бөліміне GOOGLE_GENERATIVE_AI_API_KEY қосуы керек."
           : raw || "Жауап алу мүмкін болмады. Кейінірек қайталап көріңіз.";
       toast.error(message);
     },

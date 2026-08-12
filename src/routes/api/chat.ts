@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
-import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { createGoogleAiProvider } from "@/lib/ai-gateway.server";
 
 const SYSTEM_PROMPT = `Сен — «tarbie+» мектеп тәрбие жұмысын басқару жүйесінің ЖИ көмекшісісің.
 Мектеп: №82 мектеп. Жүйеде мына бөлімдер бар:
@@ -28,13 +28,13 @@ export const Route = createFileRoute("/api/chat")({
             return new Response("Messages are required", { status: 400 });
           }
 
-          const key = process.env["LOVABLE_API_KEY"];
-          if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
+          const key = process.env["GOOGLE_GENERATIVE_AI_API_KEY"];
+          if (!key) return new Response("Missing GOOGLE_GENERATIVE_AI_API_KEY", { status: 500 });
 
-          const gateway = createLovableAiGatewayProvider(key);
+          const google = createGoogleAiProvider(key);
 
           const result = streamText({
-            model: gateway("google/gemini-3.6-flash"),
+            model: google("gemini-2.5-flash"),
             system: SYSTEM_PROMPT,
             messages: await convertToModelMessages(messages as UIMessage[]),
           });
