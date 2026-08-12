@@ -22,15 +22,31 @@ function monthBounds(month: string) {
  * Барлық сыныптардың жинақталған мониторингі.
  * Кез келген сынып жетекшісіне көрінеді — тек агрегат көрсеткіштер,
  * оқушылардың жеке деректері көрсетілмейді.
+ *
+ * «Сынып сапасы %» — Админ → Сынып критерийлері бөлімінде қойылған балдардан
+ * есептеледі (class_quality кестесі, барлық пайдаланушыға оқуға ашық), сондықтан
+ * бұл баған әрдайым көрінеді. Қатысым % — жеке күндер тек иесіне/әкімшіге
+ * ашық болғандықтан, жинақ көрсеткіш арнайы серверлік функциямен алынады;
+ * ол сәтсіз аяқталса да, сынып сапасы кестесі бөгелмей көрсетіледі.
  */
 export function ClassMonitoring() {
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
   const bounds = monthBounds(month);
   const fetchSummary = useServerFn(getClassAttendanceSummary);
 
+  const classesQuery = useQuery({
+    queryKey: ["classes"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("classes").select("id, name").order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const summaryQuery = useQuery({
     queryKey: ["class-attendance-summary", bounds.start, bounds.end],
     queryFn: () => fetchSummary({ data: { from: bounds.start, to: bounds.end } }),
+    retry: false,
   });
 
   const qualityQuery = useQuery({
@@ -57,15 +73,21 @@ export function ClassMonitoring() {
       quality.set(q.class_id, list);
     }
 
-    const list = (summaryQuery.data ?? []).map((s) => {
-      const qs = quality.get(s.classId) ?? [];
+    const attendance = new Map<string, { percent: number | null; days: number }>();
+    for (const s of summaryQuery.data ?? []) {
+      attendance.set(s.classId, { percent: s.percent, days: s.days });
+    }
+
+    const list = (classesQuery.data ?? []).map((c) => {
+      const qs = quality.get(c.id) ?? [];
       const qualityPercent =
         qs.length > 0 ? Math.round(qs.reduce((a, b) => a + b, 0) / qs.length) : null;
+      const a = attendance.get(c.id);
       return {
-        id: s.classId,
-        name: s.name,
-        attendance: s.percent,
-        days: s.days,
+        id: c.id,
+        name: c.name,
+        attendance: a?.percent ?? null,
+        days: a?.days ?? 0,
         qualityPercent,
       };
     });
@@ -75,7 +97,10 @@ export function ClassMonitoring() {
     return sortClassesByLiter(list).sort(
       (a, b) => (b.qualityPercent ?? -1) - (a.qualityPercent ?? -1),
     );
-  }, [summaryQuery.data, qualityQuery.data]);
+  }, [classesQuery.data, summaryQuery.data, qualityQuery.data]);
+
+  const loading = classesQuery.isLoading || qualityQuery.isLoading;
+  const failed = classesQuery.isError || qualityQuery.isError;
 
   return (
     <section className="mt-6 rounded-2xl border border-border bg-card p-6">
@@ -98,25 +123,44 @@ export function ClassMonitoring() {
         </div>
       </div>
 
-      {summaryQuery.isLoading ? (
+      {loading ? (
         <p className="mt-6 text-sm text-muted-foreground">Жүктелуде…</p>
-      ) : summaryQuery.isError ? (
+      ) : failed ? (
         <p className="mt-6 text-sm text-destructive">Деректерді жүктеу мүмкін болмады.</p>
+      ) : rows.length === 0 ? (
+        <p className="mt-6 text-sm text-muted-foreground">Әзірге сынып қосылмаған.</p>
       ) : (
         <div className="mt-5 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-muted-foreground">
                 <th className="py-2 font-medium">Сынып</th>
+                <th className="py-2 text-right font-medium">Сынып сапасы %</th>
                 <th className="py-2 text-right font-medium">Қатысым %</th>
                 <th className="py-2 text-right font-medium">Белгіленген күн</th>
-                <th className="py-2 text-right font-medium">Сынып сапасы %</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((r) => (
                 <tr key={r.id} className="border-t border-border/60">
                   <td className="py-2 pr-3 font-medium">{r.name} сынып</td>
+                  <td className="py-2 text-right">
+                    {r.qualityPercent !== null ? (
+                      <span
+                        className={
+                          r.qualityPercent >= 90
+                            ? "font-semibold text-primary"
+                            : r.qualityPercent >= 75
+                              ? "font-semibold"
+                              : "font-semibold text-destructive"
+                        }
+                      >
+                        {r.qualityPercent}%
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </td>
                   <td className="py-2 text-right">
                     {r.attendance !== null ? (
                       <span
@@ -135,27 +179,15 @@ export function ClassMonitoring() {
                     )}
                   </td>
                   <td className="py-2 text-right text-muted-foreground">{r.days}</td>
-                  <td className="py-2 text-right">
-                    {r.qualityPercent !== null ? (
-                      <span
-                        className={
-                          r.qualityPercent >= 90
-                            ? "font-semibold text-primary"
-                            : r.qualityPercent >= 75
-                              ? "font-semibold"
-                              : "font-semibold text-destructive"
-                        }
-                      >
-                        {r.qualityPercent}%
-                      </span>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          {summaryQuery.isError && (
+            <p className="mt-3 text-xs text-muted-foreground">
+              Қатысым % уақытша қолжетімсіз. Сынып сапасы деректері бұған байланысты емес.
+            </p>
+          )}
         </div>
       )}
     </section>

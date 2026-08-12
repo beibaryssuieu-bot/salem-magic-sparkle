@@ -135,7 +135,14 @@ function Chat({
     id: `assistant-${userId}`,
     messages: initialMessages,
     transport,
-    onError: () => toast.error("Жауап алу мүмкін болмады. Кейінірек қайталап көріңіз."),
+    onError: (error) => {
+      const raw = error?.message?.trim();
+      const message =
+        raw === "Missing LOVABLE_API_KEY"
+          ? "ЖИ көмекші қосылмаған: Lovable AI кілті орнатылмаған. Әкімші Lovable жобасында AI Gateway-ді қосуы керек."
+          : raw || "Жауап алу мүмкін болмады. Кейінірек қайталап көріңіз.";
+      toast.error(message);
+    },
   });
 
   const persist = useCallback(

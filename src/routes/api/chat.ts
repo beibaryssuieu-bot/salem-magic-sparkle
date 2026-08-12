@@ -22,25 +22,31 @@ export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const { messages } = (await request.json()) as { messages?: unknown };
-        if (!Array.isArray(messages)) {
-          return new Response("Messages are required", { status: 400 });
+        try {
+          const { messages } = (await request.json()) as { messages?: unknown };
+          if (!Array.isArray(messages)) {
+            return new Response("Messages are required", { status: 400 });
+          }
+
+          const key = process.env["LOVABLE_API_KEY"];
+          if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
+
+          const gateway = createLovableAiGatewayProvider(key);
+
+          const result = streamText({
+            model: gateway("google/gemini-3.6-flash"),
+            system: SYSTEM_PROMPT,
+            messages: await convertToModelMessages(messages as UIMessage[]),
+          });
+
+          return result.toUIMessageStreamResponse({
+            originalMessages: messages as UIMessage[],
+          });
+        } catch (error) {
+          console.error("[api/chat]", error);
+          const message = error instanceof Error ? error.message : "Unknown error";
+          return new Response(message, { status: 500 });
         }
-
-        const key = process.env["LOVABLE_API_KEY"];
-        if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
-
-        const gateway = createLovableAiGatewayProvider(key);
-
-        const result = streamText({
-          model: gateway("google/gemini-3.6-flash"),
-          system: SYSTEM_PROMPT,
-          messages: await convertToModelMessages(messages as UIMessage[]),
-        });
-
-        return result.toUIMessageStreamResponse({
-          originalMessages: messages as UIMessage[],
-        });
       },
     },
   },
