@@ -13,13 +13,13 @@ import { useProfile, useSession } from "@/lib/auth";
 export const Route = createFileRoute("/_authenticated/events")({
   head: () => ({
     meta: [
-      { title: "Іс-шаралар — TÄRBIE OS" },
+      { title: "Іс-шаралар — tarbie+" },
       {
         name: "description",
         content:
           "Мектептің алдағы тәрбие іс-шараларының күнтізбесі: әкімші енгізеді, сынып жетекшілері көреді.",
       },
-      { property: "og:title", content: "Іс-шаралар — TÄRBIE OS" },
+      { property: "og:title", content: "Іс-шаралар — tarbie+" },
       {
         property: "og:description",
         content: "Алдағы мектеп іс-шараларының тізімі мен сипаттамасы.",

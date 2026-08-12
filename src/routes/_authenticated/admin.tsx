@@ -34,13 +34,13 @@ import {
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
     meta: [
-      { title: "Балдық мониторингті енгізу — TÄRBIE OS" },
+      { title: "Балдық мониторингті енгізу — tarbie+" },
       {
         name: "description",
         content:
           "Әкімшіге арналған бет: сынып жетекшілерінің критерийлер бойынша айлық баллдарын енгізу.",
       },
-      { property: "og:title", content: "Балдық мониторингті енгізу — TÄRBIE OS" },
+      { property: "og:title", content: "Балдық мониторингті енгізу — tarbie+" },
       {
         property: "og:description",
         content: "Барлық сыныптар бойынша критерийлік балдарды бір жерден енгізіңіз.",

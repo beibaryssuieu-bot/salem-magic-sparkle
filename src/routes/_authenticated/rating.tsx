@@ -36,13 +36,13 @@ import {
 export const Route = createFileRoute("/_authenticated/rating")({
   head: () => ({
     meta: [
-      { title: "Рейтинг — TÄRBIE OS" },
+      { title: "Рейтинг — tarbie+" },
       {
         name: "description",
         content:
           "Үздік сынып жетекші және үздік сынып рейтингтері: айлық, тоқсандық, жартыжылдық және жылдық мониторинг.",
       },
-      { property: "og:title", content: "Рейтинг — TÄRBIE OS" },
+      { property: "og:title", content: "Рейтинг — tarbie+" },
       {
         property: "og:description",
         content: "Екі тәуелсіз рейтинг: сынып жетекшілер және сыныптар бойынша.",

@@ -1,7 +1,8 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { LogOut, LayoutDashboard, Settings2, TreeDeciduous } from "lucide-react";
+import { LogOut, LayoutDashboard, Settings2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { AppLogo } from "@/components/app-logo";
 import { Button } from "@/components/ui/button";
 import { useProfile, useSession } from "@/lib/auth";
 
@@ -22,10 +23,8 @@ export function AppHeader() {
     <header className="sticky top-0 z-30 border-b border-border/60 bg-background/85 backdrop-blur">
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2">
-          <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <TreeDeciduous className="size-5" />
-          </span>
-          <span className="font-display text-lg font-bold tracking-tight">TÄRBIE OS</span>
+          <AppLogo className="size-9" />
+          <span className="font-display text-lg font-bold tracking-tight">tarbie+</span>
         </Link>
 
         <nav className="flex items-center gap-2">

@@ -38,13 +38,13 @@ import {
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
-      { title: "Сынып жетекшісінің мониторингі — TÄRBIE OS" },
+      { title: "Сынып жетекшісінің мониторингі — tarbie+" },
       {
         name: "description",
         content:
           "Сынып жетекшісінің тәрбие жұмысы бойынша балдық мониторингі: критерийлер, жиналған балл және пайыздық көрсеткіш.",
       },
-      { property: "og:title", content: "Сынып жетекшісінің мониторингі — TÄRBIE OS" },
+      { property: "og:title", content: "Сынып жетекшісінің мониторингі — tarbie+" },
       {
         property: "og:description",
         content: "Балдық жүйе бойынша сынып жетекшісінің айлық мониторинг нәтижесі.",
@@ -137,19 +137,12 @@ function Dashboard() {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Select
-              value={activeClassId}
-              onValueChange={setClassId}
-              disabled={!me?.isAdmin}
-            >
+            <Select value={activeClassId} onValueChange={setClassId}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="Сынып" />
               </SelectTrigger>
               <SelectContent>
-                {(me?.isAdmin
-                  ? classes
-                  : classes.filter((c) => c.name === me?.profile?.class_name)
-                ).map((c) => (
+                {classes.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.name} сынып
                   </SelectItem>

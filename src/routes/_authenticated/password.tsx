@@ -12,12 +12,12 @@ import { usernameToEmail } from "@/lib/auth";
 export const Route = createFileRoute("/_authenticated/password")({
   head: () => ({
     meta: [
-      { title: "Парольді өзгерту — TÄRBIE OS" },
+      { title: "Парольді өзгерту — tarbie+" },
       {
         name: "description",
         content: "Сынып жетекшілері мен әкімші өз аккаунтының паролін ауыстыратын бет.",
       },
-      { property: "og:title", content: "Парольді өзгерту — TÄRBIE OS" },
+      { property: "og:title", content: "Парольді өзгерту — tarbie+" },
       {
         property: "og:description",
         content: "Бастапқы парольді ауыстырып, аккаунтыңызды қорғаңыз.",

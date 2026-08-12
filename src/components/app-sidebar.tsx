@@ -11,9 +11,9 @@ import {
   LogOut,
   Settings2,
   Trophy,
-  TreeDeciduous,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { AppLogo } from "@/components/app-logo";
 import { Button } from "@/components/ui/button";
 import {
   Sidebar,
@@ -65,12 +65,10 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <Link to="/" className="flex items-center gap-2 px-1 py-1">
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground">
-            <TreeDeciduous className="size-4" />
-          </span>
+          <AppLogo className="size-8" />
           {!collapsed && (
             <span className="truncate font-display text-base font-bold tracking-tight">
-              TÄRBIE OS
+              tarbie+
             </span>
           )}
         </Link>

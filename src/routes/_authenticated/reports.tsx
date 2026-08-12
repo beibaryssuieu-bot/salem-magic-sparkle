@@ -21,13 +21,13 @@ import { sortClassesByLiter } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({
     meta: [
-      { title: "Есептер — TÄRBIE OS" },
+      { title: "Есептер — tarbie+" },
       {
         name: "description",
         content:
           "Сынып жетекшілерінің атқарылған жұмыстары бойынша құжаттарын, презентацияларын және фотоларын жүктеу бөлімі.",
       },
-      { property: "og:title", content: "Есептер — TÄRBIE OS" },
+      { property: "og:title", content: "Есептер — tarbie+" },
       {
         property: "og:description",
         content: "Жетекшілердің жұмыс есептері: құжат, презентация, фото және түсініктеме.",

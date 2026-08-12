@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 
-const SYSTEM_PROMPT = `Сен — «TÄRBIE OS» мектеп тәрбие жұмысын басқару жүйесінің ЖИ көмекшісісің.
+const SYSTEM_PROMPT = `Сен — «tarbie+» мектеп тәрбие жұмысын басқару жүйесінің ЖИ көмекшісісің.
 Мектеп: №82 мектеп. Жүйеде мына бөлімдер бар:
 - Басты бет (Жеке мониторинг және Сынып мониторингі),
 - Рейтинг («Үздік сынып жетекші» және «Үздік сынып»),

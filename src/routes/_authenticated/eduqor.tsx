@@ -13,13 +13,13 @@ import { useProfile, useSession } from "@/lib/auth";
 export const Route = createFileRoute("/_authenticated/eduqor")({
   head: () => ({
     meta: [
-      { title: "EduQor — ортақ құжаттар — TÄRBIE OS" },
+      { title: "EduQor — ортақ құжаттар — tarbie+" },
       {
         name: "description",
         content:
           "EduQor — сынып жетекшілерінің ортақ құжаттар қоры: кез келген жетекші жүктей алады, барлығы көріп, жүктеп ала алады.",
       },
-      { property: "og:title", content: "EduQor — ортақ құжаттар — TÄRBIE OS" },
+      { property: "og:title", content: "EduQor — ортақ құжаттар — tarbie+" },
       {
         property: "og:description",
         content: "Сынып жетекшілері арасында әдістемелік материалдармен алмасу кеңістігі.",

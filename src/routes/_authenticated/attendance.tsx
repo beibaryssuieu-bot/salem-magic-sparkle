@@ -16,12 +16,12 @@ import { sortClassesByLiter } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/attendance")({
   head: () => ({
     meta: [
-      { title: "Қатысым — TÄRBIE OS" },
+      { title: "Қатысым — tarbie+" },
       {
         name: "description",
         content: "Сыныптардың күнделікті, апталық және айлық сабаққа қатысу мониторингі.",
       },
-      { property: "og:title", content: "Қатысым — TÄRBIE OS" },
+      { property: "og:title", content: "Қатысым — tarbie+" },
       {
         property: "og:description",
         content: "Сынып жетекшілері күндік қатысымды енгізеді, әкімші бақылайды.",

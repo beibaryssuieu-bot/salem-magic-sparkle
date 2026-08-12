@@ -24,13 +24,13 @@ import { Shimmer } from "@/components/ai-elements/shimmer";
 export const Route = createFileRoute("/_authenticated/assistant")({
   head: () => ({
     meta: [
-      { title: "ЖИ көмекші — TÄRBIE OS" },
+      { title: "ЖИ көмекші — tarbie+" },
       {
         name: "description",
         content:
-          "Тәрбие жұмысы және TÄRBIE OS жүйесі бойынша сұрақтарға қазақ және орыс тілінде жауап беретін ЖИ көмекші.",
+          "Тәрбие жұмысы және tarbie+ жүйесі бойынша сұрақтарға қазақ және орыс тілінде жауап беретін ЖИ көмекші.",
       },
-      { property: "og:title", content: "ЖИ көмекші — TÄRBIE OS" },
+      { property: "og:title", content: "ЖИ көмекші — tarbie+" },
       {
         property: "og:description",
         content: "Сынып жетекшілерге арналған ЖИ көмекші чаты.",

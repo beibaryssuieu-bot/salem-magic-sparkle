@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
+import { AppLogo } from "@/components/app-logo";
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
@@ -10,7 +11,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border/60 bg-background/85 px-3 backdrop-blur">
             <SidebarTrigger />
-            <span className="font-display text-sm font-bold tracking-tight">TÄRBIE OS</span>
+            <AppLogo className="size-6" />
+            <span className="font-display text-sm font-bold tracking-tight">tarbie+</span>
           </header>
           <main className="min-w-0 flex-1">{children}</main>
         </div>

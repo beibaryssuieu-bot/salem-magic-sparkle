@@ -32,13 +32,13 @@ import {
 export const Route = createFileRoute("/_authenticated/class-criteria")({
   head: () => ({
     meta: [
-      { title: "Сынып критерийлері — TÄRBIE OS" },
+      { title: "Сынып критерийлері — tarbie+" },
       {
         name: "description",
         content:
           "«Үздік сынып» рейтингіне арналған критерийлерді енгізу: кешікпеу, қатысым, форма, гигиена, баға қоры.",
       },
-      { property: "og:title", content: "Сынып критерийлері — TÄRBIE OS" },
+      { property: "og:title", content: "Сынып критерийлері — tarbie+" },
       {
         property: "og:description",
         content: "Әкімші сыныптардың ай сайынғы критерийлік балдарын енгізеді.",

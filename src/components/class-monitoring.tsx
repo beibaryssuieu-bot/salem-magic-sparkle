@@ -5,11 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getClassAttendanceSummary } from "@/lib/attendance.functions";
-import {
-  classPercentOf,
-  classTotalPoints,
-  type ClassQualityRow,
-} from "@/lib/class-criteria";
+import { classPercentOf, classTotalPoints, type ClassQualityRow } from "@/lib/class-criteria";
 import { sortClassesByLiter } from "@/lib/utils";
 
 function monthBounds(month: string) {
@@ -74,8 +70,10 @@ export function ClassMonitoring() {
       };
     });
 
+    // Сынып критерийлері бөлімінде қойылған балдар бойынша есептелетін
+    // «Сынып сапасы %» негізгі көрсеткіш болғандықтан, тізім осы бойынша сұрыпталады.
     return sortClassesByLiter(list).sort(
-      (a, b) => (b.attendance ?? -1) - (a.attendance ?? -1),
+      (a, b) => (b.qualityPercent ?? -1) - (a.qualityPercent ?? -1),
     );
   }, [summaryQuery.data, qualityQuery.data]);
 
@@ -138,7 +136,21 @@ export function ClassMonitoring() {
                   </td>
                   <td className="py-2 text-right text-muted-foreground">{r.days}</td>
                   <td className="py-2 text-right">
-                    {r.qualityPercent !== null ? `${r.qualityPercent}%` : "—"}
+                    {r.qualityPercent !== null ? (
+                      <span
+                        className={
+                          r.qualityPercent >= 90
+                            ? "font-semibold text-primary"
+                            : r.qualityPercent >= 75
+                              ? "font-semibold"
+                              : "font-semibold text-destructive"
+                        }
+                      >
+                        {r.qualityPercent}%
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
                   </td>
                 </tr>
               ))}

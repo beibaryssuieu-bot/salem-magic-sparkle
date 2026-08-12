@@ -13,13 +13,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Жүйеге кіру — TÄRBIE OS" },
+      { title: "Жүйеге кіру — tarbie+" },
       {
         name: "description",
         content:
-          "Сынып жетекшілері мен әкімшілерге арналған TÄRBIE OS жүйесіне логин және құпиясөз арқылы кіру беті.",
+          "Сынып жетекшілері мен әкімшілерге арналған tarbie+ жүйесіне логин және құпиясөз арқылы кіру беті.",
       },
-      { property: "og:title", content: "Жүйеге кіру — TÄRBIE OS" },
+      { property: "og:title", content: "Жүйеге кіру — tarbie+" },
       {
         property: "og:description",
         content: "Логин мен құпиясөз арқылы сыныбыңыздың тәрбиелік шкаласына қол жеткізіңіз.",
@@ -121,7 +121,7 @@ function AuthPage() {
     <div className="min-h-screen bg-background">
       <AppHeader />
       <main className="mx-auto flex w-full max-w-md flex-col px-4 py-14">
-        <h1 className="font-display text-2xl font-bold">TÄRBIE OS жүйесіне кіру</h1>
+        <h1 className="font-display text-2xl font-bold">tarbie+ жүйесіне кіру</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Логин мен құпиясөзді енгізіңіз. Логинді латын әріптерімен жазыңыз.
         </p>

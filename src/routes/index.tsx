@@ -12,22 +12,23 @@ import {
   Users,
 } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
+import { AppLogo } from "@/components/app-logo";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "TÄRBIE OS — мектептің тәрбие жұмысын басқару жүйесі" },
+      { title: "tarbie+ — мектептің тәрбие жұмысын басқару жүйесі" },
       {
         name: "description",
         content:
-          "TÄRBIE OS — мектептің тәрбиелік көрсеткіштерін жинайтын, талдайтын және сынып жетекшілеріне жеке шкала беретін цифрлық басқару жүйесі.",
+          "tarbie+ — мектептің тәрбиелік көрсеткіштерін жинайтын, талдайтын және сынып жетекшілеріне жеке шкала беретін цифрлық басқару жүйесі.",
       },
-      { property: "og:title", content: "TÄRBIE OS — мектептің тәрбие жұмысын басқару жүйесі" },
+      { property: "og:title", content: "tarbie+ — мектептің тәрбие жұмысын басқару жүйесі" },
       {
         property: "og:description",
         content:
-          "TÄRBIE OS — мектептің тәрбиелік көрсеткіштерін жинайтын, талдайтын және сынып жетекшілеріне жеке шкала беретін цифрлық басқару жүйесі.",
+          "tarbie+ — мектептің тәрбиелік көрсеткіштерін жинайтын, талдайтын және сынып жетекшілеріне жеке шкала беретін цифрлық басқару жүйесі.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -97,8 +98,9 @@ export default function Landing() {
               <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/15 px-3 py-1 text-xs font-medium uppercase tracking-wide">
                 <Sparkles className="size-3.5" /> Мектептің тәрбие операциялық жүйесі
               </span>
-              <h1 className="mt-5 font-display text-4xl font-bold leading-tight md:text-6xl">
-                TÄRBIE OS
+              <h1 className="mt-5 flex items-center gap-3 font-display text-4xl font-bold leading-tight md:text-6xl">
+                <AppLogo className="size-11 md:size-14" />
+                tarbie+
               </h1>
               <p className="mt-4 max-w-xl text-lg opacity-90">
                 Мектептің тәрбиелік басқаруына арналған жасанды интеллект жүйесі. Әр сынып
@@ -145,7 +147,7 @@ export default function Landing() {
 
         <section className="mx-auto w-full max-w-7xl px-4 py-16">
           <h2 className="text-center font-display text-2xl font-bold md:text-3xl">
-            TÄRBIE OS — AI модульдері
+            tarbie+ — AI модульдері
           </h2>
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {modules.map((m, i) => (
@@ -236,7 +238,10 @@ export default function Landing() {
 
       <footer className="panel-dark">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-2 px-4 py-10">
-          <p className="font-display text-xl font-bold">TÄRBIE OS</p>
+          <p className="flex items-center gap-2 font-display text-xl font-bold">
+            <AppLogo className="size-8" />
+            tarbie+
+          </p>
           <p className="text-sm opacity-80">
             Мектептің тәрбиелік басқаруын жаңа деңгейге шығаратын AI операциялық жүйесі.
           </p>
