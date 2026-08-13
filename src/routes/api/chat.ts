@@ -41,6 +41,18 @@ export const Route = createFileRoute("/api/chat")({
 
           return result.toUIMessageStreamResponse({
             originalMessages: messages as UIMessage[],
+            // AI SDK-дың әдепкі "An error occurred." хабарын нақты себеппен
+            // ауыстырамыз — сынап-тексеру үшін (сезімтал дерек ағызбайды,
+            // тек провайдер қатесінің мәтіні).
+            onError: (error) => {
+              console.error("[api/chat] stream error", error);
+              const responseBody =
+                error && typeof error === "object" && "responseBody" in error
+                  ? String((error as { responseBody?: unknown }).responseBody ?? "")
+                  : "";
+              const base = error instanceof Error ? error.message : String(error);
+              return responseBody ? `${base}: ${responseBody}` : base;
+            },
           });
         } catch (error) {
           console.error("[api/chat]", error);
