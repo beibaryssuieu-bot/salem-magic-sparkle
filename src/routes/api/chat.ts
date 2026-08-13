@@ -34,7 +34,12 @@ export const Route = createFileRoute("/api/chat")({
           const google = createGoogleAiProvider(key);
 
           const result = streamText({
-            model: google("gemini-2.5-flash"),
+            // "gemini-2.5-flash" сияқты нақты нұсқа атаулары Google тарапынан
+            // жаңа кілттерге жабылып қалуы мүмкін (2.5 сериясы 2026-10-16
+            // жойылады). "gemini-flash-latest" — Google өзі жаңартып отыратын
+            // тұрақты бүркеншік ат, нұсқа ауысқанда бұл жерді қайта түзетудің
+            // қажеті болмайды.
+            model: google("gemini-flash-latest"),
             system: SYSTEM_PROMPT,
             messages: await convertToModelMessages(messages as UIMessage[]),
           });
