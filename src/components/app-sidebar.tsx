@@ -24,6 +24,7 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
@@ -32,6 +33,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useProfile, useSession } from "@/lib/auth";
+import { useReportNotifications } from "@/lib/report-notifications";
 
 const items = [
   { title: "Басты бет", url: "/dashboard", icon: LayoutDashboard },
@@ -44,7 +46,6 @@ const items = [
   { title: "Парольді өзгерту", url: "/password", icon: KeyRound },
 ] as const;
 
-
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
@@ -53,6 +54,7 @@ export function AppSidebar() {
   const { data } = useProfile(user);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { data: reportNotif } = useReportNotifications(!!data?.isAdmin);
 
   async function signOut() {
     await queryClient.cancelQueries();
@@ -79,16 +81,29 @@ export function AppSidebar() {
           <SidebarGroupLabel>Бөлімдер</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton asChild isActive={pathname === item.url} tooltip={item.title}>
-                    <Link to={item.url} className="flex items-center gap-2">
-                      <item.icon className="size-4 shrink-0" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {items.map((item) => {
+                const badge =
+                  item.url === "/reports" && data?.isAdmin ? (reportNotif?.total ?? 0) : 0;
+                return (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={pathname === item.url}
+                      tooltip={item.title}
+                    >
+                      <Link to={item.url} className="flex items-center gap-2">
+                        <item.icon className="size-4 shrink-0" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                    {badge > 0 && (
+                      <SidebarMenuBadge className="bg-destructive text-destructive-foreground">
+                        {badge}
+                      </SidebarMenuBadge>
+                    )}
+                  </SidebarMenuItem>
+                );
+              })}
 
               {data?.isAdmin && (
                 <SidebarMenuItem>
@@ -101,10 +116,7 @@ export function AppSidebar() {
                   {!collapsed && (
                     <SidebarMenuSub>
                       <SidebarMenuSubItem>
-                        <SidebarMenuSubButton
-                          asChild
-                          isActive={pathname === "/class-criteria"}
-                        >
+                        <SidebarMenuSubButton asChild isActive={pathname === "/class-criteria"}>
                           <Link to="/class-criteria">Сынып критерийлері</Link>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>

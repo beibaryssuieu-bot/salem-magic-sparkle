@@ -312,37 +312,46 @@ export type Database = {
           class_id: string | null
           comment: string | null
           created_at: string
-          file_name: string
-          file_path: string
+          file_name: string | null
+          file_path: string | null
           file_type: string | null
           id: string
+          link_url: string | null
+          status: string
           title: string
           updated_at: string
           user_id: string
+          viewed_at: string | null
         }
         Insert: {
           class_id?: string | null
           comment?: string | null
           created_at?: string
-          file_name: string
-          file_path: string
+          file_name?: string | null
+          file_path?: string | null
           file_type?: string | null
           id?: string
+          link_url?: string | null
+          status?: string
           title: string
           updated_at?: string
           user_id: string
+          viewed_at?: string | null
         }
         Update: {
           class_id?: string | null
           comment?: string | null
           created_at?: string
-          file_name?: string
-          file_path?: string
+          file_name?: string | null
+          file_path?: string | null
           file_type?: string | null
           id?: string
+          link_url?: string | null
+          status?: string
           title?: string
           updated_at?: string
           user_id?: string
+          viewed_at?: string | null
         }
         Relationships: [
           {
