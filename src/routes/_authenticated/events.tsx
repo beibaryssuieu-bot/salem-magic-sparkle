@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { CalendarDays, Plus, Trash2 } from "lucide-react";
@@ -99,9 +99,7 @@ function EventsPage() {
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8">
       <h1 className="font-display text-2xl font-bold md:text-3xl">Іс-шаралар</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Алдағы мектеп іс-шараларының күнтізбесі.
-      </p>
+      <p className="mt-2 text-sm text-muted-foreground">Алдағы мектеп іс-шараларының күнтізбесі.</p>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[2fr_1fr]">
         <section className="space-y-6">
@@ -128,15 +126,22 @@ function EventsPage() {
                         <p className="mt-2 text-muted-foreground">{e.description}</p>
                       )}
                     </div>
-                    {me?.isAdmin && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => deleteMutation.mutate(e.id)}
-                      >
-                        <Trash2 className="size-4" />
+                    <div className="flex shrink-0 gap-2">
+                      <Button asChild variant="outline" size="sm">
+                        <Link to="/events/$eventId" params={{ eventId: e.id }}>
+                          Ашу
+                        </Link>
                       </Button>
-                    )}
+                      {me?.isAdmin && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => deleteMutation.mutate(e.id)}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      )}
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -146,12 +151,21 @@ function EventsPage() {
           {past.length > 0 && (
             <div className="rounded-2xl border border-border bg-card p-6">
               <h2 className="font-display font-bold">Өткен іс-шаралар</h2>
-              <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+              <ul className="mt-4 space-y-2 text-sm">
                 {past.map((e) => (
-                  <li key={e.id} className="flex justify-between gap-4">
-                    <span className="min-w-0 truncate">{e.title}</span>
-                    <span className="shrink-0">
-                      {new Date(e.event_date).toLocaleDateString("kk-KZ")}
+                  <li key={e.id} className="flex items-center justify-between gap-4">
+                    <span className="min-w-0 truncate text-muted-foreground">{e.title}</span>
+                    <span className="flex shrink-0 items-center gap-3">
+                      <span className="text-muted-foreground">
+                        {new Date(e.event_date).toLocaleDateString("kk-KZ")}
+                      </span>
+                      <Link
+                        to="/events/$eventId"
+                        params={{ eventId: e.id }}
+                        className="font-medium text-primary hover:underline"
+                      >
+                        Ашу
+                      </Link>
                     </span>
                   </li>
                 ))}

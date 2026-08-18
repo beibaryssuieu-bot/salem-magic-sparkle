@@ -23,6 +23,7 @@ import { Route as AuthenticatedPasswordRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedRatingRouteImport } from './routes/_authenticated/rating'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as AuthenticatedEventsEventIdRouteImport } from './routes/_authenticated/events.$eventId'
 import { Route as ApiPublicSeedRosterRouteImport } from './routes/api/public/seed-roster'
 
 const IndexRoute = IndexRouteImport.update({
@@ -95,6 +96,12 @@ const ApiChatRoute = ApiChatRouteImport.update({
   path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedEventsEventIdRoute =
+  AuthenticatedEventsEventIdRouteImport.update({
+    id: '/$eventId',
+    path: '/$eventId',
+    getParentRoute: () => AuthenticatedEventsRoute,
+  } as any)
 const ApiPublicSeedRosterRoute = ApiPublicSeedRosterRouteImport.update({
   id: '/api/public/seed-roster',
   path: '/api/public/seed-roster',
@@ -110,11 +117,12 @@ export interface FileRoutesByFullPath {
   '/class-criteria': typeof AuthenticatedClassCriteriaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/eduqor': typeof AuthenticatedEduqorRoute
-  '/events': typeof AuthenticatedEventsRoute
+  '/events': typeof AuthenticatedEventsRouteWithChildren
   '/password': typeof AuthenticatedPasswordRoute
   '/rating': typeof AuthenticatedRatingRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/api/chat': typeof ApiChatRoute
+  '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/api/public/seed-roster': typeof ApiPublicSeedRosterRoute
 }
 export interface FileRoutesByTo {
@@ -126,11 +134,12 @@ export interface FileRoutesByTo {
   '/class-criteria': typeof AuthenticatedClassCriteriaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/eduqor': typeof AuthenticatedEduqorRoute
-  '/events': typeof AuthenticatedEventsRoute
+  '/events': typeof AuthenticatedEventsRouteWithChildren
   '/password': typeof AuthenticatedPasswordRoute
   '/rating': typeof AuthenticatedRatingRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/api/chat': typeof ApiChatRoute
+  '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/api/public/seed-roster': typeof ApiPublicSeedRosterRoute
 }
 export interface FileRoutesById {
@@ -144,11 +153,12 @@ export interface FileRoutesById {
   '/_authenticated/class-criteria': typeof AuthenticatedClassCriteriaRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/eduqor': typeof AuthenticatedEduqorRoute
-  '/_authenticated/events': typeof AuthenticatedEventsRoute
+  '/_authenticated/events': typeof AuthenticatedEventsRouteWithChildren
   '/_authenticated/password': typeof AuthenticatedPasswordRoute
   '/_authenticated/rating': typeof AuthenticatedRatingRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/api/chat': typeof ApiChatRoute
+  '/_authenticated/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/api/public/seed-roster': typeof ApiPublicSeedRosterRoute
 }
 export interface FileRouteTypes {
@@ -167,6 +177,7 @@ export interface FileRouteTypes {
     | '/rating'
     | '/reports'
     | '/api/chat'
+    | '/events/$eventId'
     | '/api/public/seed-roster'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -183,6 +194,7 @@ export interface FileRouteTypes {
     | '/rating'
     | '/reports'
     | '/api/chat'
+    | '/events/$eventId'
     | '/api/public/seed-roster'
   id:
     | '__root__'
@@ -200,6 +212,7 @@ export interface FileRouteTypes {
     | '/_authenticated/rating'
     | '/_authenticated/reports'
     | '/api/chat'
+    | '/_authenticated/events/$eventId'
     | '/api/public/seed-roster'
   fileRoutesById: FileRoutesById
 }
@@ -311,6 +324,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/events/$eventId': {
+      id: '/_authenticated/events/$eventId'
+      path: '/$eventId'
+      fullPath: '/events/$eventId'
+      preLoaderRoute: typeof AuthenticatedEventsEventIdRouteImport
+      parentRoute: typeof AuthenticatedEventsRoute
+    }
     '/api/public/seed-roster': {
       id: '/api/public/seed-roster'
       path: '/api/public/seed-roster'
@@ -321,6 +341,17 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedEventsRouteChildren {
+  AuthenticatedEventsEventIdRoute: typeof AuthenticatedEventsEventIdRoute
+}
+
+const AuthenticatedEventsRouteChildren: AuthenticatedEventsRouteChildren = {
+  AuthenticatedEventsEventIdRoute: AuthenticatedEventsEventIdRoute,
+}
+
+const AuthenticatedEventsRouteWithChildren =
+  AuthenticatedEventsRoute._addFileChildren(AuthenticatedEventsRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAssistantRoute: typeof AuthenticatedAssistantRoute
@@ -328,7 +359,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedClassCriteriaRoute: typeof AuthenticatedClassCriteriaRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEduqorRoute: typeof AuthenticatedEduqorRoute
-  AuthenticatedEventsRoute: typeof AuthenticatedEventsRoute
+  AuthenticatedEventsRoute: typeof AuthenticatedEventsRouteWithChildren
   AuthenticatedPasswordRoute: typeof AuthenticatedPasswordRoute
   AuthenticatedRatingRoute: typeof AuthenticatedRatingRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
@@ -341,7 +372,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedClassCriteriaRoute: AuthenticatedClassCriteriaRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEduqorRoute: AuthenticatedEduqorRoute,
-  AuthenticatedEventsRoute: AuthenticatedEventsRoute,
+  AuthenticatedEventsRoute: AuthenticatedEventsRouteWithChildren,
   AuthenticatedPasswordRoute: AuthenticatedPasswordRoute,
   AuthenticatedRatingRoute: AuthenticatedRatingRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,

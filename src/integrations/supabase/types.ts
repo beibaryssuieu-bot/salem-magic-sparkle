@@ -259,6 +259,146 @@ export type Database = {
         }
         Relationships: []
       }
+      event_plans: {
+        Row: {
+          class_id: string
+          created_at: string
+          event_id: string
+          file_name: string | null
+          file_path: string | null
+          file_type: string | null
+          id: string
+          link_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          event_id: string
+          file_name?: string | null
+          file_path?: string | null
+          file_type?: string | null
+          id?: string
+          link_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          event_id?: string
+          file_name?: string | null
+          file_path?: string | null
+          file_type?: string | null
+          id?: string
+          link_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_plans_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_plans_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_report_attachments: {
+        Row: {
+          created_at: string
+          file_name: string | null
+          file_path: string | null
+          file_type: string | null
+          id: string
+          kind: string
+          link_url: string | null
+          report_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name?: string | null
+          file_path?: string | null
+          file_type?: string | null
+          id?: string
+          kind: string
+          link_url?: string | null
+          report_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string | null
+          file_path?: string | null
+          file_type?: string | null
+          id?: string
+          kind?: string
+          link_url?: string | null
+          report_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_report_attachments_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "event_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_reports: {
+        Row: {
+          class_id: string
+          created_at: string
+          description: string | null
+          event_id: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          description?: string | null
+          event_id: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          description?: string | null
+          event_id?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_reports_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_reports_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           created_at: string
