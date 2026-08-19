@@ -22,7 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useProfile, useSession } from "@/lib/auth";
 import { sortClassesByLiter } from "@/lib/utils";
 
-export const Route = createFileRoute("/_authenticated/events/$eventId")({
+export const Route = createFileRoute("/_authenticated/events_/$eventId")({
   head: () => ({
     meta: [{ title: "Іс-шара — tarbie+" }],
   }),
