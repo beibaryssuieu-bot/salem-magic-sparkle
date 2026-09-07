@@ -423,6 +423,149 @@ export type Database = {
         }
         Relationships: []
       }
+      meeting_attendance: {
+        Row: {
+          id: string
+          meeting_id: string
+          registered_at: string
+          teacher_id: string
+        }
+        Insert: {
+          id?: string
+          meeting_id: string
+          registered_at?: string
+          teacher_id: string
+        }
+        Update: {
+          id?: string
+          meeting_id?: string
+          registered_at?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_attendance_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_attendance_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "meeting_teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meeting_department_targets: {
+        Row: {
+          department: string
+          expected_count: number
+          id: string
+          meeting_id: string
+        }
+        Insert: {
+          department: string
+          expected_count?: number
+          id?: string
+          meeting_id: string
+        }
+        Update: {
+          department?: string
+          expected_count?: number
+          id?: string
+          meeting_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_department_targets_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meeting_teachers: {
+        Row: {
+          created_at: string
+          department: string
+          full_name: string
+          full_name_key: string
+          id: string
+          position: string
+          school: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          department: string
+          full_name: string
+          full_name_key: string
+          id?: string
+          position: string
+          school: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          department?: string
+          full_name?: string
+          full_name_key?: string
+          id?: string
+          position?: string
+          school?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      meetings: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          end_time: string
+          expected_count: number
+          id: string
+          location: string | null
+          meeting_date: string
+          qr_token: string
+          registration_open: boolean
+          start_time: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          end_time: string
+          expected_count?: number
+          id?: string
+          location?: string | null
+          meeting_date: string
+          qr_token?: string
+          registration_open?: boolean
+          start_time: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          end_time?: string
+          expected_count?: number
+          id?: string
+          location?: string | null
+          meeting_date?: string
+          qr_token?: string
+          registration_open?: boolean
+          start_time?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           class_name: string | null
@@ -526,6 +669,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      checkin_meeting_attendance: {
+        Args: {
+          p_department: string
+          p_full_name: string
+          p_position: string
+          p_qr_token: string
+          p_school: string
+        }
+        Returns: Json
+      }
+      get_meeting_registration_status: {
+        Args: {
+          p_full_name: string
+          p_qr_token: string
+        }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
