@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   Library,
   LogOut,
+  QrCode,
   Settings2,
   Trophy,
 } from "lucide-react";
@@ -33,6 +34,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useProfile, useSession } from "@/lib/auth";
+import { SCHOOL_SHORT_NAME } from "@/lib/meeting-constants";
 import { useReportNotifications } from "@/lib/report-notifications";
 
 const items = [
@@ -107,6 +109,21 @@ export function AppSidebar() {
 
               {data?.isAdmin && (
                 <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname.startsWith("/meetings")}
+                    tooltip="Жиналыстар"
+                  >
+                    <Link to="/meetings" className="flex items-center gap-2">
+                      <QrCode className="size-4 shrink-0" />
+                      <span>Жиналыстар</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+
+              {data?.isAdmin && (
+                <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={pathname === "/admin"} tooltip="Басқару">
                     <Link to="/admin" className="flex items-center gap-2">
                       <Settings2 className="size-4 shrink-0" />
@@ -130,6 +147,16 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
+        {!collapsed && (
+          <div className="flex items-center gap-2 px-2 pb-1">
+            <img
+              src="/school-logo.jpg"
+              alt={SCHOOL_SHORT_NAME}
+              className="size-6 shrink-0 rounded-full object-cover"
+            />
+            <span className="truncate text-xs opacity-70">{SCHOOL_SHORT_NAME}</span>
+          </div>
+        )}
         {!collapsed && (
           <p className="truncate px-2 text-xs opacity-70">
             {data?.profile?.full_name || data?.profile?.username}

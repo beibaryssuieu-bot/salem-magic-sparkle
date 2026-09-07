@@ -25,6 +25,9 @@ import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticate
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AuthenticatedEventsEventIdRouteImport } from './routes/_authenticated/events_.$eventId'
 import { Route as ApiPublicSeedRosterRouteImport } from './routes/api/public/seed-roster'
+import { Route as QrTokenRouteImport } from './routes/qr.$token'
+import { Route as AuthenticatedMeetingsRouteImport } from './routes/_authenticated/meetings'
+import { Route as AuthenticatedMeetingsMeetingIdRouteImport } from './routes/_authenticated/meetings_.$meetingId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -107,6 +110,22 @@ const ApiPublicSeedRosterRoute = ApiPublicSeedRosterRouteImport.update({
   path: '/api/public/seed-roster',
   getParentRoute: () => rootRouteImport,
 } as any)
+const QrTokenRoute = QrTokenRouteImport.update({
+  id: '/qr/$token',
+  path: '/qr/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedMeetingsRoute = AuthenticatedMeetingsRouteImport.update({
+  id: '/meetings',
+  path: '/meetings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMeetingsMeetingIdRoute =
+  AuthenticatedMeetingsMeetingIdRouteImport.update({
+    id: '/meetings_/$meetingId',
+    path: '/meetings/$meetingId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -124,6 +143,9 @@ export interface FileRoutesByFullPath {
   '/api/chat': typeof ApiChatRoute
   '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/api/public/seed-roster': typeof ApiPublicSeedRosterRoute
+  '/qr/$token': typeof QrTokenRoute
+  '/meetings': typeof AuthenticatedMeetingsRoute
+  '/meetings/$meetingId': typeof AuthenticatedMeetingsMeetingIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -141,6 +163,9 @@ export interface FileRoutesByTo {
   '/api/chat': typeof ApiChatRoute
   '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/api/public/seed-roster': typeof ApiPublicSeedRosterRoute
+  '/qr/$token': typeof QrTokenRoute
+  '/meetings': typeof AuthenticatedMeetingsRoute
+  '/meetings/$meetingId': typeof AuthenticatedMeetingsMeetingIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -160,6 +185,9 @@ export interface FileRoutesById {
   '/api/chat': typeof ApiChatRoute
   '/_authenticated/events_/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/api/public/seed-roster': typeof ApiPublicSeedRosterRoute
+  '/qr/$token': typeof QrTokenRoute
+  '/_authenticated/meetings': typeof AuthenticatedMeetingsRoute
+  '/_authenticated/meetings_/$meetingId': typeof AuthenticatedMeetingsMeetingIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -179,6 +207,9 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/events/$eventId'
     | '/api/public/seed-roster'
+    | '/qr/$token'
+    | '/meetings'
+    | '/meetings/$meetingId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -196,6 +227,9 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/events/$eventId'
     | '/api/public/seed-roster'
+    | '/qr/$token'
+    | '/meetings'
+    | '/meetings/$meetingId'
   id:
     | '__root__'
     | '/'
@@ -214,6 +248,9 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/_authenticated/events_/$eventId'
     | '/api/public/seed-roster'
+    | '/qr/$token'
+    | '/_authenticated/meetings'
+    | '/_authenticated/meetings_/$meetingId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -222,6 +259,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiPublicSeedRosterRoute: typeof ApiPublicSeedRosterRoute
+  QrTokenRoute: typeof QrTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -338,6 +376,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSeedRosterRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/qr/$token': {
+      id: '/qr/$token'
+      path: '/qr/$token'
+      fullPath: '/qr/$token'
+      preLoaderRoute: typeof QrTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/meetings': {
+      id: '/_authenticated/meetings'
+      path: '/meetings'
+      fullPath: '/meetings'
+      preLoaderRoute: typeof AuthenticatedMeetingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/meetings_/$meetingId': {
+      id: '/_authenticated/meetings_/$meetingId'
+      path: '/meetings/$meetingId'
+      fullPath: '/meetings/$meetingId'
+      preLoaderRoute: typeof AuthenticatedMeetingsMeetingIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -353,6 +412,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedRatingRoute: typeof AuthenticatedRatingRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedEventsEventIdRoute: typeof AuthenticatedEventsEventIdRoute
+  AuthenticatedMeetingsRoute: typeof AuthenticatedMeetingsRoute
+  AuthenticatedMeetingsMeetingIdRoute: typeof AuthenticatedMeetingsMeetingIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -367,6 +428,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedRatingRoute: AuthenticatedRatingRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedEventsEventIdRoute: AuthenticatedEventsEventIdRoute,
+  AuthenticatedMeetingsRoute: AuthenticatedMeetingsRoute,
+  AuthenticatedMeetingsMeetingIdRoute: AuthenticatedMeetingsMeetingIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -378,6 +441,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ApiChatRoute: ApiChatRoute,
   ApiPublicSeedRosterRoute: ApiPublicSeedRosterRoute,
+  QrTokenRoute: QrTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
