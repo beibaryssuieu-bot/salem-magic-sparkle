@@ -98,7 +98,11 @@ function MeetingsPage() {
       queryClient.invalidateQueries({ queryKey: ["meetings"] });
     },
     onError: (err: Error) =>
-      toast.error(err.message === "empty" ? "Барлық өрісті толтырыңыз" : "Құру сәтсіз аяқталды"),
+      toast.error(
+        err.message === "empty"
+          ? "Барлық өрісті толтырыңыз"
+          : `Құру сәтсіз аяқталды: ${err.message}`,
+      ),
   });
 
   const toggleMutation = useMutation({
