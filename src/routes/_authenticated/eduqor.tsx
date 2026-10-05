@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useProfile, useSession } from "@/lib/auth";
+import { useStorageActions } from "@/lib/storage-client";
 
 export const Route = createFileRoute("/_authenticated/eduqor")({
   head: () => ({
@@ -45,6 +46,7 @@ function EduQorPage() {
   const { user } = useSession();
   const { data: me } = useProfile(user);
   const queryClient = useQueryClient();
+  const { uploadFile, openStoredFile, removeStoredFile } = useStorageActions();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -65,14 +67,12 @@ function EduQorPage() {
   const uploadMutation = useMutation({
     mutationFn: async () => {
       if (!file || !title.trim()) throw new Error("empty");
-      const path = `${user!.id}/${crypto.randomUUID()}-${file.name.replace(/[^\w.\-]/g, "_")}`;
-      const up = await supabase.storage.from("eduqor").upload(path, file);
-      if (up.error) throw up.error;
+      const { key } = await uploadFile(file);
       const { error } = await supabase.from("eduqor_docs").insert({
         user_id: user!.id,
         title: title.trim(),
         description: description.trim() || null,
-        file_path: path,
+        file_path: key,
         file_name: file.name,
         file_type: file.type || null,
       });
@@ -90,7 +90,7 @@ function EduQorPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (row: DocRow) => {
-      await supabase.storage.from("eduqor").remove([row.file_path]);
+      await removeStoredFile("eduqor_docs", row.file_path);
       const { error } = await supabase.from("eduqor_docs").delete().eq("id", row.id);
       if (error) throw error;
     },
@@ -102,14 +102,11 @@ function EduQorPage() {
   });
 
   async function download(row: DocRow) {
-    const { data, error } = await supabase.storage
-      .from("eduqor")
-      .createSignedUrl(row.file_path, 60, { download: row.file_name });
-    if (error || !data) {
+    try {
+      await openStoredFile("eduqor_docs", row.file_path, row.file_name);
+    } catch {
       toast.error("Файлды ашу мүмкін болмады");
-      return;
     }
-    window.open(data.signedUrl, "_blank");
   }
 
   const rows = docsQuery.data ?? [];
