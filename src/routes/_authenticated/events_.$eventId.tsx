@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useProfile, useSession } from "@/lib/auth";
+import { useStorageActions } from "@/lib/storage-client";
 import { sortClassesByLiter } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/events_/$eventId")({
@@ -67,22 +68,20 @@ function isValidUrl(value: string) {
   }
 }
 
-async function openFile(path: string, name?: string | null) {
-  const { data, error } = await supabase.storage
-    .from("reports")
-    .createSignedUrl(path, 60, name ? { download: name } : {});
-  if (error || !data) {
-    toast.error("Файлды ашу мүмкін болмады");
-    return;
-  }
-  window.open(data.signedUrl, "_blank");
-}
-
 function EventDetailPage() {
   const { eventId } = Route.useParams();
   const { user } = useSession();
   const { data: me } = useProfile(user);
   const queryClient = useQueryClient();
+  const { uploadFile, openStoredFile, removeStoredFile } = useStorageActions();
+
+  async function openFile(table: string, path: string, name?: string | null) {
+    try {
+      await openStoredFile(table, path, name);
+    } catch {
+      toast.error("Файлды ашу мүмкін болмады");
+    }
+  }
 
   const [planFile, setPlanFile] = useState<File | null>(null);
   const [planLink, setPlanLink] = useState("");
@@ -198,15 +197,13 @@ function EventDetailPage() {
       let file_name = myPlan?.file_name ?? null;
       let file_type: string | null = null;
       if (planFile) {
-        const path = `${user!.id}/${crypto.randomUUID()}-${planFile.name.replace(/[^\w.-]/g, "_")}`;
-        const up = await supabase.storage.from("reports").upload(path, planFile);
-        if (up.error) throw up.error;
-        if (myPlan?.file_path) await supabase.storage.from("reports").remove([myPlan.file_path]);
-        file_path = path;
+        const { key } = await uploadFile(planFile);
+        if (myPlan?.file_path) await removeStoredFile("event_plans", myPlan.file_path);
+        file_path = key;
         file_name = planFile.name;
         file_type = planFile.type || null;
       } else if (planRemoveFile && myPlan?.file_path) {
-        await supabase.storage.from("reports").remove([myPlan.file_path]);
+        await removeStoredFile("event_plans", myPlan.file_path);
         file_path = null;
         file_name = null;
       }
@@ -270,13 +267,11 @@ function EventDetailPage() {
     mutationFn: async () => {
       if (!newFile) throw new Error("no_file");
       const reportId = await upsertReport(reportDescription);
-      const path = `${user!.id}/${crypto.randomUUID()}-${newFile.name.replace(/[^\w.-]/g, "_")}`;
-      const up = await supabase.storage.from("reports").upload(path, newFile);
-      if (up.error) throw up.error;
+      const { key } = await uploadFile(newFile);
       const { error } = await supabase.from("event_report_attachments").insert({
         report_id: reportId,
         kind: "file",
-        file_path: path,
+        file_path: key,
         file_name: newFile.name,
         file_type: newFile.type || null,
       });
@@ -314,7 +309,7 @@ function EventDetailPage() {
 
   const removeAttachmentMutation = useMutation({
     mutationFn: async (att: AttachmentRow) => {
-      if (att.file_path) await supabase.storage.from("reports").remove([att.file_path]);
+      if (att.file_path) await removeStoredFile("event_report_attachments", att.file_path);
       const { error } = await supabase.from("event_report_attachments").delete().eq("id", att.id);
       if (error) throw error;
     },
@@ -449,7 +444,8 @@ function EventDetailPage() {
                       type="button"
                       className="flex min-w-0 items-center gap-2 truncate text-left hover:underline"
                       onClick={() =>
-                        myPlan.file_path && openFile(myPlan.file_path, myPlan.file_name)
+                        myPlan.file_path &&
+                        openFile("event_plans", myPlan.file_path, myPlan.file_name)
                       }
                     >
                       <Paperclip className="size-4 shrink-0" />
@@ -530,7 +526,10 @@ function EventDetailPage() {
                           <button
                             type="button"
                             className="flex min-w-0 items-center gap-2 truncate text-left hover:underline"
-                            onClick={() => a.file_path && openFile(a.file_path, a.file_name)}
+                            onClick={() =>
+                              a.file_path &&
+                              openFile("event_report_attachments", a.file_path, a.file_name)
+                            }
                           >
                             <Paperclip className="size-4 shrink-0" /> {a.file_name}
                           </button>
@@ -620,7 +619,7 @@ function EventDetailPage() {
                         size="sm"
                         onClick={() =>
                           viewingPlan.file_path &&
-                          openFile(viewingPlan.file_path, viewingPlan.file_name)
+                          openFile("event_plans", viewingPlan.file_path, viewingPlan.file_name)
                         }
                       >
                         <Paperclip className="size-4" /> {viewingPlan.file_name}
@@ -656,7 +655,10 @@ function EventDetailPage() {
                             key={a.id}
                             variant="outline"
                             size="sm"
-                            onClick={() => a.file_path && openFile(a.file_path, a.file_name)}
+                            onClick={() =>
+                              a.file_path &&
+                              openFile("event_report_attachments", a.file_path, a.file_name)
+                            }
                           >
                             <Paperclip className="size-4" /> {a.file_name}
                           </Button>

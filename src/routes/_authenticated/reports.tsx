@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/select";
 import { useProfile, useSession } from "@/lib/auth";
 import { useReportNotifications } from "@/lib/report-notifications";
+import { useStorageActions } from "@/lib/storage-client";
 import { sortClassesByLiter } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/reports")({
@@ -84,6 +85,7 @@ function ReportsPage() {
   const { user } = useSession();
   const { data: me } = useProfile(user);
   const queryClient = useQueryClient();
+  const { uploadFile, openStoredFile, removeStoredFile } = useStorageActions();
 
   const [title, setTitle] = useState("");
   const [comment, setComment] = useState("");
@@ -157,10 +159,8 @@ function ReportsPage() {
       let file_name: string | null = null;
       let file_type: string | null = null;
       if (file) {
-        const path = `${user!.id}/${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, "_")}`;
-        const up = await supabase.storage.from("reports").upload(path, file);
-        if (up.error) throw up.error;
-        file_path = path;
+        const { key } = await uploadFile(file);
+        file_path = key;
         file_name = file.name;
         file_type = file.type || null;
       }
@@ -206,17 +206,15 @@ function ReportsPage() {
       let file_name = editingReport.file_name;
       let file_type: string | null = null;
       if (file) {
-        const path = `${user!.id}/${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, "_")}`;
-        const up = await supabase.storage.from("reports").upload(path, file);
-        if (up.error) throw up.error;
+        const { key } = await uploadFile(file);
         if (editingReport.file_path) {
-          await supabase.storage.from("reports").remove([editingReport.file_path]);
+          await removeStoredFile("reports", editingReport.file_path);
         }
-        file_path = path;
+        file_path = key;
         file_name = file.name;
         file_type = file.type || null;
       } else if (removeExistingFile && editingReport.file_path) {
-        await supabase.storage.from("reports").remove([editingReport.file_path]);
+        await removeStoredFile("reports", editingReport.file_path);
         file_path = null;
         file_name = null;
       }
@@ -259,7 +257,7 @@ function ReportsPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (row: ReportRow) => {
-      if (row.file_path) await supabase.storage.from("reports").remove([row.file_path]);
+      if (row.file_path) await removeStoredFile("reports", row.file_path);
       const { error } = await supabase.from("reports").delete().eq("id", row.id);
       if (error) throw error;
     },
@@ -288,14 +286,11 @@ function ReportsPage() {
 
   async function download(row: ReportRow) {
     if (!row.file_path) return;
-    const { data, error } = await supabase.storage
-      .from("reports")
-      .createSignedUrl(row.file_path, 60, row.file_name ? { download: row.file_name } : {});
-    if (error || !data) {
+    try {
+      await openStoredFile("reports", row.file_path, row.file_name);
+    } catch {
       toast.error("Файлды ашу мүмкін болмады");
-      return;
     }
-    window.open(data.signedUrl, "_blank");
   }
 
   function startEdit(row: ReportRow) {
