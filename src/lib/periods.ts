@@ -26,8 +26,10 @@ export function currentAcademicYear(date = new Date()) {
   return date.getMonth() + 1 >= 9 ? date.getFullYear() : date.getFullYear() - 1;
 }
 
-/** Негізгі оқу жылы — 2026–2027 */
-export const DEFAULT_ACADEMIC_START_YEAR = 2026;
+/** Ағымдағы айдың кезең күні (YYYY-MM-01) */
+export function currentMonthPeriod(date = new Date()) {
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-01`;
+}
 
 export function academicYearOptions(count = 4, toYear = currentAcademicYear() + 1) {
   return Array.from({ length: count }, (_, i) => toYear - i).map((y) => ({

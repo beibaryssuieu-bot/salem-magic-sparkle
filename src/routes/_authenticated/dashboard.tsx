@@ -16,10 +16,11 @@ import { RatingAlert } from "@/components/rating-alert";
 import { ClassMonitoring } from "@/components/class-monitoring";
 import { useProfile, useSession } from "@/lib/auth";
 import {
-  DEFAULT_ACADEMIC_START_YEAR,
   academicWeeks,
   academicYearOptions,
   academicYearPeriodList,
+  currentAcademicYear,
+  currentMonthPeriod,
   periodTitle,
 } from "@/lib/periods";
 import {
@@ -60,7 +61,7 @@ function Dashboard() {
   const { user } = useSession();
   const { data: me } = useProfile(user);
   const [classId, setClassId] = useState<string>("");
-  const [year, setYear] = useState(String(DEFAULT_ACADEMIC_START_YEAR));
+  const [year, setYear] = useState(String(currentAcademicYear()));
   const [period, setPeriod] = useState<string>("");
   const [tab, setTab] = useState<"personal" | "class">("personal");
 
@@ -102,12 +103,14 @@ function Dashboard() {
     [year],
   );
 
-  const activePeriod = period || allPeriods[0] || "";
+  const defaultPeriod = allPeriods.includes(currentMonthPeriod())
+    ? currentMonthPeriod()
+    : (allPeriods[0] ?? "");
+  const activePeriod = period || defaultPeriod;
   const current = classRows.find((r) => r.period === activePeriod);
   const periodIndex = allPeriods.indexOf(activePeriod);
-  const previous = periodIndex > 0
-    ? classRows.find((r) => r.period === allPeriods[periodIndex - 1])
-    : undefined;
+  const previous =
+    periodIndex > 0 ? classRows.find((r) => r.period === allPeriods[periodIndex - 1]) : undefined;
   const activeClass = classes.find((c) => c.id === activeClassId);
 
   const total = current ? totalPoints(current.scores) : 0;
@@ -149,7 +152,6 @@ function Dashboard() {
                 ))}
               </SelectContent>
             </Select>
-
 
             <Select
               value={year}

@@ -11,13 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  MAX_TOTAL,
-  levelLabel,
-  percentOf,
-  totalPoints,
-  type ClassScoreRow,
-} from "@/lib/criteria";
+import { MAX_TOTAL, levelLabel, percentOf, totalPoints, type ClassScoreRow } from "@/lib/criteria";
 import {
   CLASS_MAX_TOTAL,
   classPercentOf,
@@ -28,7 +22,8 @@ import {
 import {
   PERIOD_KIND_LABELS,
   academicYearOptions,
-  DEFAULT_ACADEMIC_START_YEAR,
+  currentAcademicYear,
+  currentMonthPeriod,
   periodOptions,
   type PeriodKind,
 } from "@/lib/periods";
@@ -67,7 +62,7 @@ type Tab = "teacher" | "class";
 function RatingPage() {
   const [tab, setTab] = useState<Tab>("teacher");
   const [kind, setKind] = useState<PeriodKind>("month");
-  const [year, setYear] = useState(String(DEFAULT_ACADEMIC_START_YEAR));
+  const [year, setYear] = useState(String(currentAcademicYear()));
   const [selection, setSelection] = useState("");
 
   const classesQuery = useQuery({
@@ -106,7 +101,10 @@ function RatingPage() {
   });
 
   const options = useMemo(() => periodOptions(kind, Number(year)), [kind, year]);
-  const active = options.find((o) => o.value === selection) ?? options[0];
+  const active =
+    options.find((o) => o.value === selection) ??
+    options.find((o) => o.periods.includes(currentMonthPeriod())) ??
+    options[0];
 
   const rating = useMemo<RatingRow[]>(() => {
     const classes = classesQuery.data ?? [];
@@ -117,9 +115,8 @@ function RatingPage() {
       return classes
         .map((c) => {
           const mine = rows.filter((r) => r.class_id === c.id && periods.has(r.period));
-          const points = Math.round(
-            mine.reduce((s, r) => s + classTotalPoints(r.scores), 0) * 10,
-          ) / 10;
+          const points =
+            Math.round(mine.reduce((s, r) => s + classTotalPoints(r.scores), 0) * 10) / 10;
           const max = CLASS_MAX_TOTAL * Math.max(1, mine.length);
           return {
             id: c.id,
@@ -160,8 +157,8 @@ function RatingPage() {
     <div className="mx-auto w-full max-w-6xl px-4 py-8">
       <h1 className="font-display text-2xl font-bold md:text-3xl">Рейтинг</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Екі тәуелсіз мониторинг: сынып жетекшілер жұмысы және сыныптардың күнделікті
-        көрсеткіштері. Кезең — қыркүйектен мамырға дейін.
+        Екі тәуелсіз мониторинг: сынып жетекшілер жұмысы және сыныптардың күнделікті көрсеткіштері.
+        Кезең — қыркүйектен мамырға дейін.
       </p>
 
       <div className="mt-6 inline-flex rounded-xl border border-border bg-card p-1">
