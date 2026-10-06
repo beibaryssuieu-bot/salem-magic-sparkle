@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useProfile, useSession } from "@/lib/auth";
 import { MAX_TOTAL, levelLabel, percentOf, totalPoints, type ClassScoreRow } from "@/lib/criteria";
 import {
   CLASS_MAX_TOTAL,
@@ -27,6 +28,7 @@ import {
   periodOptions,
   type PeriodKind,
 } from "@/lib/periods";
+import { sortClassesByLiter } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/rating")({
   head: () => ({
@@ -60,6 +62,8 @@ type RatingRow = {
 type Tab = "teacher" | "class";
 
 function RatingPage() {
+  const { user } = useSession();
+  const { data: me } = useProfile(user);
   const [tab, setTab] = useState<Tab>("teacher");
   const [kind, setKind] = useState<PeriodKind>("month");
   const [year, setYear] = useState(String(currentAcademicYear()));
@@ -97,6 +101,19 @@ function RatingPage() {
         ...r,
         scores: (r.scores ?? {}) as ClassScores,
       })) as ClassQualityRow[];
+    },
+  });
+
+  const profilesQuery = useQuery({
+    queryKey: ["profiles-class-names"],
+    enabled: !!me?.isAdmin,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("class_name, full_name")
+        .not("class_name", "is", null);
+      if (error) throw error;
+      return data ?? [];
     },
   });
 
@@ -152,6 +169,27 @@ function RatingPage() {
   const worst = [...rating].reverse().slice(0, 3);
 
   const isTeacher = tab === "teacher";
+
+  const teacherByClass = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const p of profilesQuery.data ?? []) {
+      if (p.class_name) map.set(p.class_name, p.full_name);
+    }
+    return map;
+  }, [profilesQuery.data]);
+
+  const overview = useMemo(() => {
+    const byClassId = new Map(rating.map((r) => [r.id, r]));
+    return sortClassesByLiter(classesQuery.data ?? []).map((c) => {
+      const r = byClassId.get(c.id);
+      return {
+        id: c.id,
+        className: c.name,
+        teacherName: teacherByClass.get(c.name) ?? "—",
+        percent: r?.percent ?? 0,
+      };
+    });
+  }, [classesQuery.data, rating, teacherByClass]);
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8">
@@ -308,6 +346,35 @@ function RatingPage() {
             </div>
           </section>
         </>
+      )}
+
+      {me?.isAdmin && (
+        <section className="mt-6 rounded-2xl border border-border bg-card p-6">
+          <h2 className="font-display font-bold">Барлық сынып жетекшілер — жалпы тізім</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Барлық сыныптың жетекшісі және {active?.label.toLowerCase()} бойынша пайызы.
+          </p>
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-muted-foreground">
+                  <th className="py-2 font-medium">Сынып</th>
+                  <th className="py-2 font-medium">Сынып жетекші</th>
+                  <th className="py-2 text-right font-medium">%</th>
+                </tr>
+              </thead>
+              <tbody>
+                {overview.map((r) => (
+                  <tr key={r.id} className="border-t border-border/60">
+                    <td className="py-2 pr-3 font-medium">{r.className}</td>
+                    <td className="py-2 pr-3">{r.teacherName}</td>
+                    <td className="py-2 text-right font-semibold">{r.percent}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
       )}
     </div>
   );
