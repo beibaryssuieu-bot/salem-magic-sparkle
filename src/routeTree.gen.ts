@@ -25,6 +25,7 @@ import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticate
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AuthenticatedEventsEventIdRouteImport } from './routes/_authenticated/events_.$eventId'
 import { Route as ApiPublicSeedRosterRouteImport } from './routes/api/public/seed-roster'
+import { Route as ApiPublicSyncRosterRouteImport } from './routes/api/public/sync-roster'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -107,6 +108,11 @@ const ApiPublicSeedRosterRoute = ApiPublicSeedRosterRouteImport.update({
   path: '/api/public/seed-roster',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSyncRosterRoute = ApiPublicSyncRosterRouteImport.update({
+  id: '/api/public/sync-roster',
+  path: '/api/public/sync-roster',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -124,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/api/chat': typeof ApiChatRoute
   '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/api/public/seed-roster': typeof ApiPublicSeedRosterRoute
+  '/api/public/sync-roster': typeof ApiPublicSyncRosterRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -141,6 +148,7 @@ export interface FileRoutesByTo {
   '/api/chat': typeof ApiChatRoute
   '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/api/public/seed-roster': typeof ApiPublicSeedRosterRoute
+  '/api/public/sync-roster': typeof ApiPublicSyncRosterRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -160,6 +168,7 @@ export interface FileRoutesById {
   '/api/chat': typeof ApiChatRoute
   '/_authenticated/events_/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/api/public/seed-roster': typeof ApiPublicSeedRosterRoute
+  '/api/public/sync-roster': typeof ApiPublicSyncRosterRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -179,6 +188,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/events/$eventId'
     | '/api/public/seed-roster'
+    | '/api/public/sync-roster'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -196,6 +206,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/events/$eventId'
     | '/api/public/seed-roster'
+    | '/api/public/sync-roster'
   id:
     | '__root__'
     | '/'
@@ -214,6 +225,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/_authenticated/events_/$eventId'
     | '/api/public/seed-roster'
+    | '/api/public/sync-roster'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -222,6 +234,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiPublicSeedRosterRoute: typeof ApiPublicSeedRosterRoute
+  ApiPublicSyncRosterRoute: typeof ApiPublicSyncRosterRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -338,6 +351,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSeedRosterRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sync-roster': {
+      id: '/api/public/sync-roster'
+      path: '/api/public/sync-roster'
+      fullPath: '/api/public/sync-roster'
+      preLoaderRoute: typeof ApiPublicSyncRosterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -378,6 +398,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ApiChatRoute: ApiChatRoute,
   ApiPublicSeedRosterRoute: ApiPublicSeedRosterRoute,
+  ApiPublicSyncRosterRoute: ApiPublicSyncRosterRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
