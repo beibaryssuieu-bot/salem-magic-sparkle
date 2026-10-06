@@ -28,6 +28,7 @@ import { Route as ApiPublicSeedRosterRouteImport } from './routes/api/public/see
 import { Route as QrTokenRouteImport } from './routes/qr.$token'
 import { Route as AuthenticatedMeetingsRouteImport } from './routes/_authenticated/meetings'
 import { Route as AuthenticatedMeetingsMeetingIdRouteImport } from './routes/_authenticated/meetings_.$meetingId'
+import { Route as ApiPublicSyncRosterRouteImport } from './routes/api/public/sync-roster'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -126,6 +127,11 @@ const AuthenticatedMeetingsMeetingIdRoute =
     path: '/meetings/$meetingId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicSyncRosterRoute = ApiPublicSyncRosterRouteImport.update({
+  id: '/api/public/sync-roster',
+  path: '/api/public/sync-roster',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -146,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/qr/$token': typeof QrTokenRoute
   '/meetings': typeof AuthenticatedMeetingsRoute
   '/meetings/$meetingId': typeof AuthenticatedMeetingsMeetingIdRoute
+  '/api/public/sync-roster': typeof ApiPublicSyncRosterRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -166,6 +173,7 @@ export interface FileRoutesByTo {
   '/qr/$token': typeof QrTokenRoute
   '/meetings': typeof AuthenticatedMeetingsRoute
   '/meetings/$meetingId': typeof AuthenticatedMeetingsMeetingIdRoute
+  '/api/public/sync-roster': typeof ApiPublicSyncRosterRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -188,6 +196,7 @@ export interface FileRoutesById {
   '/qr/$token': typeof QrTokenRoute
   '/_authenticated/meetings': typeof AuthenticatedMeetingsRoute
   '/_authenticated/meetings_/$meetingId': typeof AuthenticatedMeetingsMeetingIdRoute
+  '/api/public/sync-roster': typeof ApiPublicSyncRosterRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -210,6 +219,7 @@ export interface FileRouteTypes {
     | '/qr/$token'
     | '/meetings'
     | '/meetings/$meetingId'
+    | '/api/public/sync-roster'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -230,6 +240,7 @@ export interface FileRouteTypes {
     | '/qr/$token'
     | '/meetings'
     | '/meetings/$meetingId'
+    | '/api/public/sync-roster'
   id:
     | '__root__'
     | '/'
@@ -251,6 +262,7 @@ export interface FileRouteTypes {
     | '/qr/$token'
     | '/_authenticated/meetings'
     | '/_authenticated/meetings_/$meetingId'
+    | '/api/public/sync-roster'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -260,6 +272,7 @@ export interface RootRouteChildren {
   ApiChatRoute: typeof ApiChatRoute
   ApiPublicSeedRosterRoute: typeof ApiPublicSeedRosterRoute
   QrTokenRoute: typeof QrTokenRoute
+  ApiPublicSyncRosterRoute: typeof ApiPublicSyncRosterRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -397,6 +410,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMeetingsMeetingIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/sync-roster': {
+      id: '/api/public/sync-roster'
+      path: '/api/public/sync-roster'
+      fullPath: '/api/public/sync-roster'
+      preLoaderRoute: typeof ApiPublicSyncRosterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -442,6 +462,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiChatRoute: ApiChatRoute,
   ApiPublicSeedRosterRoute: ApiPublicSeedRosterRoute,
   QrTokenRoute: QrTokenRoute,
+  ApiPublicSyncRosterRoute: ApiPublicSyncRosterRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
