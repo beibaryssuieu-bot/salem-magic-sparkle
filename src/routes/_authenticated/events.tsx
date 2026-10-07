@@ -166,6 +166,15 @@ function EventsPage() {
                       >
                         Ашу
                       </Link>
+                      {me?.isAdmin && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => deleteMutation.mutate(e.id)}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      )}
                     </span>
                   </li>
                 ))}
