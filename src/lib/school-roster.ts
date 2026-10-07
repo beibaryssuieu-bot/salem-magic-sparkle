@@ -113,4 +113,14 @@ export const SCHOOL_ROSTER: RosterEntry[] = [
   { className: "9Е", fullName: "Алибеков Адильбек Арыстанович", login: "alibekov" },
   { className: "9Ж", fullName: "Сагиев Дидар Карасаевич", login: "sagiev" },
   { className: "9З", fullName: "Тулегенова Айжамал Казбаевна", login: "tulegenova" },
+
+  { className: "10А", fullName: "Жұбаева Жансауле Болатбекқызы", login: "zhubaeva" },
+  { className: "10Ә", fullName: "Қайбашов Ақылбек Терекбайұлы", login: "kaibashov" },
+  { className: "10Б", fullName: "Умирзаков Бақытбек Бауыржанұлы", login: "umirzakov" },
+  { className: "10В", fullName: "Мухтарова Камшат Мухтаровна", login: "mukhtarova" },
+
+  { className: "11А", fullName: "Толеуханова Гүлбақыт Турлановна", login: "toleukhanova" },
+  { className: "11Ә", fullName: "Сейтенова Базаргул Губайдулловна", login: "seitenova" },
+  { className: "11Б", fullName: "Бисенбай Ақмарал Жексенбайқызы", login: "bisenbai" },
+  { className: "11В", fullName: "Нурмагамбетова Кенжекей Маулетовна", login: "nurmagambetova" },
 ];
