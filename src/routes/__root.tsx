@@ -89,10 +89,26 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:title", content: "tarbie+ — мектептің тәрбие жұмысын басқару жүйесі" },
       { name: "twitter:title", content: "tarbie+ — мектептің тәрбие жұмысын басқару жүйесі" },
-      { property: "og:description", content: "tarbie+ — мектептің тәрбиелік көрсеткіштерін жинайтын, талдайтын және сынып жетекшілеріне жеке шкала беретін цифрлық басқару жүйесі." },
-      { name: "twitter:description", content: "tarbie+ — мектептің тәрбиелік көрсеткіштерін жинайтын, талдайтын және сынып жетекшілеріне жеке шкала беретін цифрлық басқару жүйесі." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/63830bbf-755b-41f0-9e4b-2db961e444cb/id-preview-ffe9f47f--9bffdad2-5f80-483f-9109-4969072feb6d.lovable.app-1785906209981.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/63830bbf-755b-41f0-9e4b-2db961e444cb/id-preview-ffe9f47f--9bffdad2-5f80-483f-9109-4969072feb6d.lovable.app-1785906209981.png" },
+      {
+        property: "og:description",
+        content:
+          "tarbie+ — мектептің тәрбиелік көрсеткіштерін жинайтын, талдайтын және сынып жетекшілеріне жеке шкала беретін цифрлық басқару жүйесі.",
+      },
+      {
+        name: "twitter:description",
+        content:
+          "tarbie+ — мектептің тәрбиелік көрсеткіштерін жинайтын, талдайтын және сынып жетекшілеріне жеке шкала беретін цифрлық басқару жүйесі.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/63830bbf-755b-41f0-9e4b-2db961e444cb/id-preview-ffe9f47f--9bffdad2-5f80-483f-9109-4969072feb6d.lovable.app-1785906209981.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/63830bbf-755b-41f0-9e4b-2db961e444cb/id-preview-ffe9f47f--9bffdad2-5f80-483f-9109-4969072feb6d.lovable.app-1785906209981.png",
+      },
     ],
     links: [
       {
@@ -105,6 +121,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap",
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/icon-32.png", type: "image/png", sizes: "32x32" },
+      { rel: "icon", href: "/icon-512.png", type: "image/png", sizes: "512x512" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
   }),
 
@@ -149,4 +168,3 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
-
