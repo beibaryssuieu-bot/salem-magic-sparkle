@@ -259,6 +259,47 @@ export type Database = {
         }
         Relationships: []
       }
+      event_plan_attachments: {
+        Row: {
+          created_at: string
+          file_name: string | null
+          file_path: string | null
+          file_type: string | null
+          id: string
+          kind: string
+          link_url: string | null
+          plan_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name?: string | null
+          file_path?: string | null
+          file_type?: string | null
+          id?: string
+          kind: string
+          link_url?: string | null
+          plan_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string | null
+          file_path?: string | null
+          file_type?: string | null
+          id?: string
+          kind?: string
+          link_url?: string | null
+          plan_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_plan_attachments_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "event_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_plans: {
         Row: {
           class_id: string
@@ -589,6 +630,47 @@ export type Database = {
           username?: string
         }
         Relationships: []
+      }
+      report_attachments: {
+        Row: {
+          created_at: string
+          file_name: string | null
+          file_path: string | null
+          file_type: string | null
+          id: string
+          kind: string
+          link_url: string | null
+          report_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name?: string | null
+          file_path?: string | null
+          file_type?: string | null
+          id?: string
+          kind: string
+          link_url?: string | null
+          report_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string | null
+          file_path?: string | null
+          file_type?: string | null
+          id?: string
+          kind?: string
+          link_url?: string | null
+          report_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_attachments_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reports: {
         Row: {

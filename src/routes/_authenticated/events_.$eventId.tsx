@@ -10,7 +10,6 @@ import {
   Eye,
   Link2,
   Paperclip,
-  Upload,
   X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,9 +35,6 @@ type PlanRow = {
   event_id: string;
   class_id: string;
   user_id: string;
-  file_path: string | null;
-  file_name: string | null;
-  link_url: string | null;
   created_at: string;
 };
 type ReportRow = {
@@ -52,6 +48,15 @@ type ReportRow = {
 type AttachmentRow = {
   id: string;
   report_id: string;
+  kind: "file" | "link";
+  file_path: string | null;
+  file_name: string | null;
+  link_url: string | null;
+  created_at: string;
+};
+type PlanAttachmentRow = {
+  id: string;
+  plan_id: string;
   kind: "file" | "link";
   file_path: string | null;
   file_name: string | null;
@@ -83,9 +88,8 @@ function EventDetailPage() {
     }
   }
 
-  const [planFile, setPlanFile] = useState<File | null>(null);
-  const [planLink, setPlanLink] = useState("");
-  const [planRemoveFile, setPlanRemoveFile] = useState(false);
+  const [newPlanFile, setNewPlanFile] = useState<File | null>(null);
+  const [newPlanLink, setNewPlanLink] = useState("");
   const [reportDescription, setReportDescription] = useState("");
   const [newLink, setNewLink] = useState("");
   const [newFile, setNewFile] = useState<File | null>(null);
@@ -118,10 +122,25 @@ function EventDetailPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("event_plans")
-        .select("*")
+        .select("id, event_id, class_id, user_id, created_at")
         .eq("event_id", eventId);
       if (error) throw error;
       return (data ?? []) as PlanRow[];
+    },
+  });
+
+  const planIds = (plansQuery.data ?? []).map((p) => p.id);
+  const planAttachmentsQuery = useQuery({
+    queryKey: ["event-plan-attachments", eventId, planIds.join(",")],
+    enabled: plansQuery.isSuccess,
+    queryFn: async () => {
+      if (planIds.length === 0) return [] as PlanAttachmentRow[];
+      const { data, error } = await supabase
+        .from("event_plan_attachments")
+        .select("*")
+        .in("plan_id", planIds);
+      if (error) throw error;
+      return (data ?? []) as PlanAttachmentRow[];
     },
   });
 
@@ -166,13 +185,11 @@ function EventDetailPage() {
   const myClass = classes.find((c) => c.name === me?.profile?.class_name);
   const myClassId = myClass?.id;
   const myPlan = plansQuery.data?.find((p) => p.class_id === myClassId);
+  const myPlanAttachments = (planAttachmentsQuery.data ?? []).filter(
+    (a) => a.plan_id === myPlan?.id,
+  );
   const myReport = reportsQuery.data?.find((r) => r.class_id === myClassId);
   const myAttachments = (attachmentsQuery.data ?? []).filter((a) => a.report_id === myReport?.id);
-
-  useEffect(() => {
-    if (myPlan) setPlanLink(myPlan.link_url ?? "");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [myPlan?.id]);
 
   useEffect(() => {
     if (myReport) setReportDescription(myReport.description ?? "");
@@ -181,58 +198,81 @@ function EventDetailPage() {
 
   function invalidateEventData() {
     queryClient.invalidateQueries({ queryKey: ["event-plans", eventId] });
+    queryClient.invalidateQueries({ queryKey: ["event-plan-attachments", eventId] });
     queryClient.invalidateQueries({ queryKey: ["event-reports", eventId] });
     queryClient.invalidateQueries({ queryKey: ["event-report-attachments", eventId] });
   }
 
-  const planMutation = useMutation({
-    mutationFn: async () => {
-      if (!myClassId) throw new Error("no_class");
-      const trimmedLink = planLink.trim();
-      const keepFile = !!myPlan?.file_path && !planRemoveFile && !planFile;
-      if (!planFile && !keepFile && !trimmedLink) throw new Error("file_or_link_required");
-      if (trimmedLink && !isValidUrl(trimmedLink)) throw new Error("invalid_url");
-
-      let file_path = myPlan?.file_path ?? null;
-      let file_name = myPlan?.file_name ?? null;
-      let file_type: string | null = null;
-      if (planFile) {
-        const { key } = await uploadFile(planFile);
-        if (myPlan?.file_path) await removeStoredFile("event_plans", myPlan.file_path);
-        file_path = key;
-        file_name = planFile.name;
-        file_type = planFile.type || null;
-      } else if (planRemoveFile && myPlan?.file_path) {
-        await removeStoredFile("event_plans", myPlan.file_path);
-        file_path = null;
-        file_name = null;
-      }
-
-      const { error } = await supabase.from("event_plans").upsert(
-        {
-          event_id: eventId,
-          class_id: myClassId,
-          user_id: user!.id,
-          file_path,
-          file_name,
-          ...(planFile ? { file_type } : {}),
-          link_url: trimmedLink || null,
-        },
+  async function ensurePlan() {
+    if (!myClassId) throw new Error("no_class");
+    if (myPlan) return myPlan.id;
+    const { data, error } = await supabase
+      .from("event_plans")
+      .upsert(
+        { event_id: eventId, class_id: myClassId, user_id: user!.id },
         { onConflict: "event_id,class_id" },
-      );
+      )
+      .select("id")
+      .single();
+    if (error) throw error;
+    return data.id as string;
+  }
+
+  const addPlanFileMutation = useMutation({
+    mutationFn: async () => {
+      if (!newPlanFile) throw new Error("no_file");
+      const planId = await ensurePlan();
+      const { key } = await uploadFile(newPlanFile);
+      const { error } = await supabase.from("event_plan_attachments").insert({
+        plan_id: planId,
+        kind: "file",
+        file_path: key,
+        file_name: newPlanFile.name,
+        file_type: newPlanFile.type || null,
+      });
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("ҚМЖ сақталды");
-      setPlanFile(null);
-      setPlanRemoveFile(false);
+      toast.success("Файл қосылды");
+      setNewPlanFile(null);
       invalidateEventData();
     },
-    onError: (err: Error) => {
-      if (err.message === "file_or_link_required") toast.error("Файл немесе сілтеме қосыңыз");
-      else if (err.message === "invalid_url") toast.error("Сілтеме дұрыс емес");
-      else toast.error("Сақтау сәтсіз аяқталды");
+    onError: () => toast.error("Файл қосылмады"),
+  });
+
+  const addPlanLinkMutation = useMutation({
+    mutationFn: async () => {
+      const trimmed = newPlanLink.trim();
+      if (!trimmed) throw new Error("empty");
+      if (!isValidUrl(trimmed)) throw new Error("invalid_url");
+      const planId = await ensurePlan();
+      const { error } = await supabase.from("event_plan_attachments").insert({
+        plan_id: planId,
+        kind: "link",
+        link_url: trimmed,
+      });
+      if (error) throw error;
     },
+    onSuccess: () => {
+      toast.success("Сілтеме қосылды");
+      setNewPlanLink("");
+      invalidateEventData();
+    },
+    onError: (err: Error) =>
+      toast.error(err.message === "invalid_url" ? "Сілтеме дұрыс емес" : "Сілтеме қосылмады"),
+  });
+
+  const removePlanAttachmentMutation = useMutation({
+    mutationFn: async (att: PlanAttachmentRow) => {
+      if (att.file_path) await removeStoredFile("event_plan_attachments", att.file_path);
+      const { error } = await supabase.from("event_plan_attachments").delete().eq("id", att.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Жойылды");
+      invalidateEventData();
+    },
+    onError: () => toast.error("Жою мүмкін болмады"),
   });
 
   async function upsertReport(description: string) {
@@ -330,6 +370,9 @@ function EventDetailPage() {
   const reportUnlocked = !!event && event.event_date <= today;
 
   const viewingPlan = plansQuery.data?.find((p) => p.class_id === viewingClassId);
+  const viewingPlanAttachments = (planAttachmentsQuery.data ?? []).filter(
+    (a) => a.plan_id === viewingPlan?.id,
+  );
   const viewingReport = reportsQuery.data?.find((r) => r.class_id === viewingClassId);
   const viewingAttachments = (attachmentsQuery.data ?? []).filter(
     (a) => a.report_id === viewingReport?.id,
@@ -438,51 +481,84 @@ function EventDetailPage() {
               <p className="mt-3 text-sm text-muted-foreground">Сыныбыңыз тағайындалмаған.</p>
             ) : (
               <div className="mt-4 space-y-4">
-                {myPlan?.file_name && !planFile && !planRemoveFile && (
-                  <div className="flex items-center justify-between gap-2 rounded-xl border border-dashed border-border p-3 text-sm">
-                    <button
-                      type="button"
-                      className="flex min-w-0 items-center gap-2 truncate text-left hover:underline"
-                      onClick={() =>
-                        myPlan.file_path &&
-                        openFile("event_plans", myPlan.file_path, myPlan.file_name)
-                      }
-                    >
-                      <Paperclip className="size-4 shrink-0" />
-                      <span className="truncate">{myPlan.file_name}</span>
-                    </button>
+                {myPlanAttachments.length > 0 && (
+                  <ul className="space-y-2">
+                    {myPlanAttachments.map((a) => (
+                      <li
+                        key={a.id}
+                        className="flex items-center justify-between gap-2 rounded-xl border border-border/60 p-3 text-sm"
+                      >
+                        {a.kind === "file" ? (
+                          <button
+                            type="button"
+                            className="flex min-w-0 items-center gap-2 truncate text-left hover:underline"
+                            onClick={() =>
+                              a.file_path &&
+                              openFile("event_plan_attachments", a.file_path, a.file_name)
+                            }
+                          >
+                            <Paperclip className="size-4 shrink-0" /> {a.file_name}
+                          </button>
+                        ) : (
+                          <a
+                            href={a.link_url ?? "#"}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex min-w-0 items-center gap-2 truncate hover:underline"
+                          >
+                            <Link2 className="size-4 shrink-0" /> {a.link_url}
+                          </a>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removePlanAttachmentMutation.mutate(a)}
+                        >
+                          <X className="size-4" />
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-2 rounded-xl border border-dashed border-border p-3">
+                    <Label htmlFor="plan-file" className="flex items-center gap-2">
+                      <Paperclip className="size-4" /> Файл қосу
+                    </Label>
+                    <Input
+                      id="plan-file"
+                      type="file"
+                      onChange={(e) => setNewPlanFile(e.target.files?.[0] ?? null)}
+                    />
                     <Button
-                      type="button"
-                      variant="ghost"
                       size="sm"
-                      className="shrink-0 text-destructive"
-                      onClick={() => setPlanRemoveFile(true)}
+                      onClick={() => addPlanFileMutation.mutate()}
+                      disabled={!newPlanFile || addPlanFileMutation.isPending}
                     >
-                      Өшіру
+                      Қосу
                     </Button>
                   </div>
-                )}
-                <div className="space-y-2">
-                  <Label htmlFor="plan-file">Файл {myPlan?.file_name ? "(ауыстыру)" : ""}</Label>
-                  <Input
-                    id="plan-file"
-                    type="file"
-                    onChange={(e) => setPlanFile(e.target.files?.[0] ?? null)}
-                  />
+                  <div className="space-y-2 rounded-xl border border-dashed border-border p-3">
+                    <Label htmlFor="plan-link" className="flex items-center gap-2">
+                      <Link2 className="size-4" /> Сілтеме қосу
+                    </Label>
+                    <Input
+                      id="plan-link"
+                      type="url"
+                      value={newPlanLink}
+                      onChange={(e) => setNewPlanLink(e.target.value)}
+                      placeholder="https://drive.google.com/..."
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => addPlanLinkMutation.mutate()}
+                      disabled={!newPlanLink.trim() || addPlanLinkMutation.isPending}
+                    >
+                      Қосу
+                    </Button>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="plan-link">Сілтеме</Label>
-                  <Input
-                    id="plan-link"
-                    type="url"
-                    value={planLink}
-                    onChange={(e) => setPlanLink(e.target.value)}
-                    placeholder="https://drive.google.com/..."
-                  />
-                </div>
-                <Button onClick={() => planMutation.mutate()} disabled={planMutation.isPending}>
-                  <Upload className="size-4" /> ҚМЖ сақтау
-                </Button>
               </div>
             )}
           </section>
@@ -612,27 +688,33 @@ function EventDetailPage() {
                   {viewingPlan.user_id && (
                     <p className="text-muted-foreground">{authorName(viewingPlan.user_id)}</p>
                   )}
-                  <div className="flex flex-wrap gap-2">
-                    {viewingPlan.file_name && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          viewingPlan.file_path &&
-                          openFile("event_plans", viewingPlan.file_path, viewingPlan.file_name)
-                        }
-                      >
-                        <Paperclip className="size-4" /> {viewingPlan.file_name}
-                      </Button>
-                    )}
-                    {viewingPlan.link_url && (
-                      <Button variant="outline" size="sm" asChild>
-                        <a href={viewingPlan.link_url} target="_blank" rel="noreferrer">
-                          <ExternalLink className="size-4" /> Сілтемені ашу
-                        </a>
-                      </Button>
-                    )}
-                  </div>
+                  {viewingPlanAttachments.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {viewingPlanAttachments.map((a) =>
+                        a.kind === "file" ? (
+                          <Button
+                            key={a.id}
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              a.file_path &&
+                              openFile("event_plan_attachments", a.file_path, a.file_name)
+                            }
+                          >
+                            <Paperclip className="size-4" /> {a.file_name}
+                          </Button>
+                        ) : (
+                          <Button key={a.id} variant="outline" size="sm" asChild>
+                            <a href={a.link_url ?? "#"} target="_blank" rel="noreferrer">
+                              <ExternalLink className="size-4" /> {a.link_url}
+                            </a>
+                          </Button>
+                        ),
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Материал қосылмаған</p>
+                  )}
                 </div>
               ) : (
                 <p className="mt-1 text-muted-foreground">Тапсырылмаған</p>

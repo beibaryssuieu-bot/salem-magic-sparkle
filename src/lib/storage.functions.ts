@@ -7,14 +7,16 @@ type RlsClient = SupabaseClient<Database>;
 
 /**
  * Файл қай кестеге тіркелгеніне қарай рұқсат тексеріледі:
- * - reports / event_plans / event_report_attachments: тек иесі немесе әкімші
- *   (Supabase Storage-тегі бұрынғы саясатпен бірдей)
+ * - reports / event_plans / event_report_attachments / report_attachments /
+ *   event_plan_attachments: тек иесі немесе әкімші
  * - eduqor_docs: кез келген кірген пайдаланушыға ашық (ортақ кітапхана)
  */
 const ALLOWED_TABLES = [
   "reports",
   "event_plans",
   "event_report_attachments",
+  "report_attachments",
+  "event_plan_attachments",
   "eduqor_docs",
 ] as const;
 type AllowedTable = (typeof ALLOWED_TABLES)[number];
@@ -58,6 +60,28 @@ async function checkFileAccess(
       .maybeSingle();
     if (!data) return false;
     const ownerId = data.event_reports?.user_id;
+    return admin || ownerId === userId;
+  }
+
+  if (table === "report_attachments") {
+    const { data } = await supabase
+      .from("report_attachments")
+      .select("report_id, reports(user_id)")
+      .eq("file_path", key)
+      .maybeSingle();
+    if (!data) return false;
+    const ownerId = data.reports?.user_id;
+    return admin || ownerId === userId;
+  }
+
+  if (table === "event_plan_attachments") {
+    const { data } = await supabase
+      .from("event_plan_attachments")
+      .select("plan_id, event_plans(user_id)")
+      .eq("file_path", key)
+      .maybeSingle();
+    if (!data) return false;
+    const ownerId = data.event_plans?.user_id;
     return admin || ownerId === userId;
   }
 

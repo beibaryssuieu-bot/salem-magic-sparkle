@@ -59,10 +59,17 @@ type ReportRow = {
   class_id: string | null;
   title: string;
   comment: string | null;
+  status: string;
+  created_at: string;
+};
+
+type AttachmentRow = {
+  id: string;
+  report_id: string;
+  kind: "file" | "link";
   file_path: string | null;
   file_name: string | null;
   link_url: string | null;
-  status: string;
   created_at: string;
 };
 
@@ -90,9 +97,10 @@ function ReportsPage() {
   const [title, setTitle] = useState("");
   const [comment, setComment] = useState("");
   const [classId, setClassId] = useState("");
-  const [linkUrl, setLinkUrl] = useState("");
-  const [file, setFile] = useState<File | null>(null);
-  const [removeExistingFile, setRemoveExistingFile] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
+  const [linkUrls, setLinkUrls] = useState<string[]>([""]);
+  const [editNewFile, setEditNewFile] = useState<File | null>(null);
+  const [editNewLink, setEditNewLink] = useState("");
   const [filterClassId, setFilterClassId] = useState("all");
   const [editingReport, setEditingReport] = useState<ReportRow | null>(null);
   const [viewingId, setViewingId] = useState<string | null>(null);
@@ -111,14 +119,33 @@ function ReportsPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("reports")
-        .select(
-          "id, user_id, class_id, title, comment, file_path, file_name, link_url, status, created_at",
-        )
+        .select("id, user_id, class_id, title, comment, status, created_at")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as ReportRow[];
     },
   });
+
+  const allRows = reportsQuery.data ?? [];
+  const reportIds = allRows.map((r) => r.id);
+
+  const attachmentsQuery = useQuery({
+    queryKey: ["report-attachments", reportIds.join(",")],
+    enabled: reportsQuery.isSuccess,
+    queryFn: async () => {
+      if (reportIds.length === 0) return [] as AttachmentRow[];
+      const { data, error } = await supabase
+        .from("report_attachments")
+        .select("*")
+        .in("report_id", reportIds);
+      if (error) throw error;
+      return (data ?? []) as AttachmentRow[];
+    },
+  });
+
+  function attachmentsOf(reportId: string) {
+    return (attachmentsQuery.data ?? []).filter((a) => a.report_id === reportId);
+  }
 
   const authorsQuery = useQuery({
     queryKey: ["profiles-all"],
@@ -132,57 +159,75 @@ function ReportsPage() {
 
   const { data: notif } = useReportNotifications(!!me?.isAdmin);
 
+  function invalidateReportData() {
+    queryClient.invalidateQueries({ queryKey: ["reports"] });
+    queryClient.invalidateQueries({ queryKey: ["report-attachments"] });
+    queryClient.invalidateQueries({ queryKey: ["report-notifications"] });
+  }
+
   function resetForm() {
     setTitle("");
     setComment("");
-    setLinkUrl("");
-    setFile(null);
-    setRemoveExistingFile(false);
+    setFiles([]);
+    setLinkUrls([""]);
+    setEditNewFile(null);
+    setEditNewLink("");
     setEditingReport(null);
   }
 
-  const keptExistingFile = !!editingReport?.file_path && !removeExistingFile && !file;
-  const hasAttachment = !!file || keptExistingFile || !!linkUrl.trim();
-  const canSubmit = !!title.trim() && hasAttachment;
+  const trimmedNewLinks = linkUrls.map((l) => l.trim()).filter(Boolean);
+  const hasAttachment = files.length > 0 || trimmedNewLinks.length > 0;
+  const canSubmit = !!title.trim() && (editingReport ? true : hasAttachment);
 
   const uploadMutation = useMutation({
     mutationFn: async () => {
       if (!title.trim()) throw new Error("title_required");
-      const trimmedLink = linkUrl.trim();
-      if (!file && !trimmedLink) throw new Error("file_or_link_required");
-      if (trimmedLink && !isValidUrl(trimmedLink)) throw new Error("invalid_url");
+      for (const l of trimmedNewLinks) if (!isValidUrl(l)) throw new Error("invalid_url");
+      if (files.length === 0 && trimmedNewLinks.length === 0) {
+        throw new Error("file_or_link_required");
+      }
 
       const own = (classesQuery.data ?? []).find((c) => c.name === me?.profile?.class_name);
       const targetClassId = me?.isAdmin ? classId : (own?.id ?? "");
 
-      let file_path: string | null = null;
-      let file_name: string | null = null;
-      let file_type: string | null = null;
-      if (file) {
-        const { key } = await uploadFile(file);
-        file_path = key;
-        file_name = file.name;
-        file_type = file.type || null;
-      }
-
-      const { error } = await supabase.from("reports").insert({
-        user_id: user!.id,
-        class_id: targetClassId || null,
-        title: title.trim(),
-        comment: comment.trim() || null,
-        file_path,
-        file_name,
-        file_type,
-        link_url: trimmedLink || null,
-        status: "pending",
-      });
+      const { data: inserted, error } = await supabase
+        .from("reports")
+        .insert({
+          user_id: user!.id,
+          class_id: targetClassId || null,
+          title: title.trim(),
+          comment: comment.trim() || null,
+          status: "pending",
+        })
+        .select("id")
+        .single();
       if (error) throw error;
+      const reportId = inserted.id as string;
+
+      for (const file of files) {
+        const { key } = await uploadFile(file);
+        const { error: attErr } = await supabase.from("report_attachments").insert({
+          report_id: reportId,
+          kind: "file",
+          file_path: key,
+          file_name: file.name,
+          file_type: file.type || null,
+        });
+        if (attErr) throw attErr;
+      }
+      for (const link of trimmedNewLinks) {
+        const { error: attErr } = await supabase.from("report_attachments").insert({
+          report_id: reportId,
+          kind: "link",
+          link_url: link,
+        });
+        if (attErr) throw attErr;
+      }
     },
     onSuccess: () => {
       toast.success("Есеп жіберілді");
       resetForm();
-      queryClient.invalidateQueries({ queryKey: ["reports"] });
-      queryClient.invalidateQueries({ queryKey: ["report-notifications"] });
+      invalidateReportData();
     },
     onError: (err: Error) => {
       if (err.message === "file_or_link_required") {
@@ -199,40 +244,12 @@ function ReportsPage() {
     mutationFn: async () => {
       if (!editingReport) return;
       if (!title.trim()) throw new Error("title_required");
-      const trimmedLink = linkUrl.trim();
-      if (trimmedLink && !isValidUrl(trimmedLink)) throw new Error("invalid_url");
-
-      let file_path = editingReport.file_path;
-      let file_name = editingReport.file_name;
-      let file_type: string | null = null;
-      if (file) {
-        const { key } = await uploadFile(file);
-        if (editingReport.file_path) {
-          await removeStoredFile("reports", editingReport.file_path);
-        }
-        file_path = key;
-        file_name = file.name;
-        file_type = file.type || null;
-      } else if (removeExistingFile && editingReport.file_path) {
-        await removeStoredFile("reports", editingReport.file_path);
-        file_path = null;
-        file_name = null;
-      }
-
-      if (!file_path && !trimmedLink) throw new Error("file_or_link_required");
-
       const wasViewed = editingReport.status === "viewed";
       const { error } = await supabase
         .from("reports")
         .update({
           title: title.trim(),
           comment: comment.trim() || null,
-          link_url: trimmedLink || null,
-          file_path,
-          file_name,
-          ...(file ? { file_type } : {}),
-          // Әкімші бұрын қарап қойған есепті сынып жетекші өзгертсе,
-          // әкімшіге қайта жаңа өзгеріс ретінде хабарлансын.
           ...(wasViewed ? { status: "pending", viewed_at: null } : {}),
         })
         .eq("id", editingReport.id);
@@ -241,30 +258,91 @@ function ReportsPage() {
     onSuccess: () => {
       toast.success("Өзгерістер сақталды");
       resetForm();
-      queryClient.invalidateQueries({ queryKey: ["reports"] });
-      queryClient.invalidateQueries({ queryKey: ["report-notifications"] });
+      invalidateReportData();
     },
     onError: (err: Error) => {
-      if (err.message === "file_or_link_required") {
-        toast.error("Файл немесе сілтеме қосыңыз");
-      } else if (err.message === "invalid_url") {
-        toast.error("Сілтеме дұрыс емес (https://... форматында болуы керек)");
-      } else {
-        toast.error("Сақтау сәтсіз аяқталды");
-      }
+      toast.error(err.message === "title_required" ? "Атауын жазыңыз" : "Сақтау сәтсіз аяқталды");
     },
+  });
+
+  async function markPendingIfWasViewed() {
+    if (editingReport?.status === "viewed") {
+      await supabase
+        .from("reports")
+        .update({ status: "pending", viewed_at: null })
+        .eq("id", editingReport.id);
+    }
+  }
+
+  const addAttachmentFileMutation = useMutation({
+    mutationFn: async () => {
+      if (!editingReport || !editNewFile) throw new Error("no_file");
+      const { key } = await uploadFile(editNewFile);
+      const { error } = await supabase.from("report_attachments").insert({
+        report_id: editingReport.id,
+        kind: "file",
+        file_path: key,
+        file_name: editNewFile.name,
+        file_type: editNewFile.type || null,
+      });
+      if (error) throw error;
+      await markPendingIfWasViewed();
+    },
+    onSuccess: () => {
+      toast.success("Файл қосылды");
+      setEditNewFile(null);
+      invalidateReportData();
+    },
+    onError: () => toast.error("Файл қосылмады"),
+  });
+
+  const addAttachmentLinkMutation = useMutation({
+    mutationFn: async () => {
+      if (!editingReport) throw new Error("no_report");
+      const trimmed = editNewLink.trim();
+      if (!trimmed) throw new Error("empty");
+      if (!isValidUrl(trimmed)) throw new Error("invalid_url");
+      const { error } = await supabase.from("report_attachments").insert({
+        report_id: editingReport.id,
+        kind: "link",
+        link_url: trimmed,
+      });
+      if (error) throw error;
+      await markPendingIfWasViewed();
+    },
+    onSuccess: () => {
+      toast.success("Сілтеме қосылды");
+      setEditNewLink("");
+      invalidateReportData();
+    },
+    onError: (err: Error) =>
+      toast.error(err.message === "invalid_url" ? "Сілтеме дұрыс емес" : "Сілтеме қосылмады"),
+  });
+
+  const removeAttachmentMutation = useMutation({
+    mutationFn: async (att: AttachmentRow) => {
+      if (att.file_path) await removeStoredFile("report_attachments", att.file_path);
+      const { error } = await supabase.from("report_attachments").delete().eq("id", att.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Жойылды");
+      invalidateReportData();
+    },
+    onError: () => toast.error("Жою мүмкін болмады"),
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (row: ReportRow) => {
-      if (row.file_path) await removeStoredFile("reports", row.file_path);
+      for (const att of attachmentsOf(row.id)) {
+        if (att.file_path) await removeStoredFile("report_attachments", att.file_path);
+      }
       const { error } = await supabase.from("reports").delete().eq("id", row.id);
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Жойылды");
-      queryClient.invalidateQueries({ queryKey: ["reports"] });
-      queryClient.invalidateQueries({ queryKey: ["report-notifications"] });
+      invalidateReportData();
     },
     onError: () => toast.error("Жою мүмкін болмады"),
   });
@@ -284,10 +362,10 @@ function ReportsPage() {
     },
   });
 
-  async function download(row: ReportRow) {
-    if (!row.file_path) return;
+  async function openAttachment(att: AttachmentRow) {
+    if (!att.file_path) return;
     try {
-      await openStoredFile("reports", row.file_path, row.file_name);
+      await openStoredFile("report_attachments", att.file_path, att.file_name);
     } catch {
       toast.error("Файлды ашу мүмкін болмады");
     }
@@ -297,14 +375,14 @@ function ReportsPage() {
     setEditingReport(row);
     setTitle(row.title);
     setComment(row.comment ?? "");
-    setLinkUrl(row.link_url ?? "");
-    setFile(null);
-    setRemoveExistingFile(false);
+    setFiles([]);
+    setLinkUrls([""]);
+    setEditNewFile(null);
+    setEditNewLink("");
   }
 
   const classes = sortClassesByLiter(classesQuery.data ?? []);
   const myClass = classes.find((c) => c.name === me?.profile?.class_name);
-  const allRows = reportsQuery.data ?? [];
   const rows = me?.isAdmin
     ? filterClassId === "all"
       ? allRows
@@ -312,6 +390,7 @@ function ReportsPage() {
     : allRows.filter((r) => !!myClass && r.class_id === myClass.id);
 
   const viewingReport = allRows.find((r) => r.id === viewingId) ?? null;
+  const viewingAttachments = viewingReport ? attachmentsOf(viewingReport.id) : [];
 
   useEffect(() => {
     if (!viewingReport || !me?.isAdmin) return;
@@ -337,7 +416,7 @@ function ReportsPage() {
         )}
       </div>
       <p className="mt-2 text-sm text-muted-foreground">
-        Атқарылған жұмыстар бойынша файл және/немесе сілтеме жіберіңіз.
+        Атқарылған жұмыстар бойынша файл(дар) және/немесе сілтеме(лер) жіберіңіз.
         {me?.isAdmin ? " Әкімші барлық жетекшілердің есептерін көреді." : ""}
       </p>
 
@@ -387,61 +466,169 @@ function ReportsPage() {
               )}
             </div>
 
-            <div className="space-y-2 rounded-xl border border-dashed border-border p-3">
-              <Label htmlFor="r-file" className="flex items-center gap-2">
-                <Paperclip className="size-4" /> Файл тіркеу
-              </Label>
-              <Input
-                id="r-file"
-                type="file"
-                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              />
-              {editingReport?.file_name && !file && !removeExistingFile && (
-                <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                  <span className="truncate">Қазіргі файл: {editingReport.file_name}</span>
+            {editingReport ? (
+              <div className="space-y-2 rounded-xl border border-dashed border-border p-3">
+                <Label className="flex items-center gap-2">
+                  <Paperclip className="size-4" /> Тіркелген материалдар
+                </Label>
+                {attachmentsOf(editingReport.id).length > 0 ? (
+                  <ul className="space-y-2">
+                    {attachmentsOf(editingReport.id).map((a) => (
+                      <li
+                        key={a.id}
+                        className="flex items-center justify-between gap-2 rounded-lg border border-border/60 p-2 text-xs"
+                      >
+                        {a.kind === "file" ? (
+                          <button
+                            type="button"
+                            className="flex min-w-0 items-center gap-2 truncate text-left hover:underline"
+                            onClick={() => openAttachment(a)}
+                          >
+                            <Paperclip className="size-3.5 shrink-0" />
+                            <span className="truncate">{a.file_name}</span>
+                          </button>
+                        ) : (
+                          <a
+                            href={a.link_url ?? "#"}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex min-w-0 items-center gap-2 truncate hover:underline"
+                          >
+                            <Link2 className="size-3.5 shrink-0" />
+                            <span className="truncate">{a.link_url}</span>
+                          </a>
+                        )}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="size-6 shrink-0"
+                          onClick={() => removeAttachmentMutation.mutate(a)}
+                        >
+                          <X className="size-3.5" />
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-xs text-muted-foreground">Әзірге материал жоқ.</p>
+                )}
+
+                <div className="grid gap-2 pt-2 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Input
+                      type="file"
+                      onChange={(e) => setEditNewFile(e.target.files?.[0] ?? null)}
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => addAttachmentFileMutation.mutate()}
+                      disabled={!editNewFile || addAttachmentFileMutation.isPending}
+                    >
+                      Файл қосу
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    <Input
+                      type="url"
+                      value={editNewLink}
+                      onChange={(e) => setEditNewLink(e.target.value)}
+                      placeholder="https://..."
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => addAttachmentLinkMutation.mutate()}
+                      disabled={!editNewLink.trim() || addAttachmentLinkMutation.isPending}
+                    >
+                      Сілтеме қосу
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-2 rounded-xl border border-dashed border-border p-3">
+                  <Label htmlFor="r-files" className="flex items-center gap-2">
+                    <Paperclip className="size-4" /> Файл(дар) тіркеу
+                  </Label>
+                  <Input
+                    id="r-files"
+                    type="file"
+                    multiple
+                    onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
+                  />
+                  {files.length > 0 && (
+                    <ul className="space-y-1">
+                      {files.map((f, i) => (
+                        <li
+                          key={`${f.name}-${i}`}
+                          className="flex items-center justify-between gap-2 text-xs text-muted-foreground"
+                        >
+                          <span className="truncate">{f.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => setFiles(files.filter((_, j) => j !== i))}
+                          >
+                            <X className="size-3.5" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div className="space-y-2 rounded-xl border border-dashed border-border p-3">
+                  <Label className="flex items-center gap-2">
+                    <Link2 className="size-4" /> Сілтеме(лер) қосу
+                  </Label>
+                  <div className="space-y-2">
+                    {linkUrls.map((l, i) => (
+                      <div key={i} className="flex gap-2">
+                        <Input
+                          type="url"
+                          value={l}
+                          onChange={(e) => {
+                            const next = [...linkUrls];
+                            next[i] = e.target.value;
+                            setLinkUrls(next);
+                          }}
+                          placeholder="https://drive.google.com/..."
+                        />
+                        {linkUrls.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="shrink-0"
+                            onClick={() => setLinkUrls(linkUrls.filter((_, j) => j !== i))}
+                          >
+                            <X className="size-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    className="h-auto shrink-0 px-2 py-1 text-destructive"
-                    onClick={() => setRemoveExistingFile(true)}
+                    onClick={() => setLinkUrls([...linkUrls, ""])}
                   >
-                    Өшіру
+                    + Тағы сілтеме
                   </Button>
+                  <p className="text-xs text-muted-foreground">
+                    Google Drive, Google Docs, Canva, YouTube немесе кез келген веб-сілтеме.
+                  </p>
                 </div>
-              )}
-              {removeExistingFile && (
-                <p className="text-xs text-muted-foreground">
-                  Файл өшіріледі.{" "}
-                  <button
-                    type="button"
-                    className="underline"
-                    onClick={() => setRemoveExistingFile(false)}
-                  >
-                    Болдырмау
-                  </button>
-                </p>
-              )}
-            </div>
 
-            <div className="space-y-2 rounded-xl border border-dashed border-border p-3">
-              <Label htmlFor="r-link" className="flex items-center gap-2">
-                <Link2 className="size-4" /> Сілтеме қосу
-              </Label>
-              <Input
-                id="r-link"
-                type="url"
-                value={linkUrl}
-                onChange={(e) => setLinkUrl(e.target.value)}
-                placeholder="https://drive.google.com/..."
-              />
-              <p className="text-xs text-muted-foreground">
-                Google Drive, Google Docs, Canva, YouTube немесе кез келген веб-сілтеме.
-              </p>
-            </div>
-
-            {!hasAttachment && (
-              <p className="text-xs text-destructive">Файл немесе сілтеме қосыңыз</p>
+                {!hasAttachment && (
+                  <p className="text-xs text-destructive">Файл немесе сілтеме қосыңыз</p>
+                )}
+              </>
             )}
 
             <div className="space-y-2">
@@ -518,6 +705,9 @@ function ReportsPage() {
             <ul className="mt-4 space-y-3">
               {rows.map((r) => {
                 const st = statusInfo(r.status);
+                const atts = attachmentsOf(r.id);
+                const fileCount = atts.filter((a) => a.kind === "file").length;
+                const linkCount = atts.filter((a) => a.kind === "link").length;
                 return (
                   <li key={r.id} className="rounded-xl border border-border/60 p-4 text-sm">
                     <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
@@ -533,8 +723,8 @@ function ReportsPage() {
                           {me?.isAdmin && authorName(r.user_id) && (
                             <span>· {authorName(r.user_id)}</span>
                           )}
-                          {r.file_name && <span>· 📎 1 файл</span>}
-                          {r.link_url && <span>· 🔗 1 сілтеме</span>}
+                          {fileCount > 0 && <span>· 📎 {fileCount} файл</span>}
+                          {linkCount > 0 && <span>· 🔗 {linkCount} сілтеме</span>}
                         </p>
                         <p className="mt-1 text-xs">
                           {st.emoji} {st.label}
@@ -550,23 +740,6 @@ function ReportsPage() {
                         >
                           <Eye className="size-4" />
                         </Button>
-                        {r.file_name && (
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            title="Файлды жүктеу"
-                            onClick={() => download(r)}
-                          >
-                            <Download className="size-4" />
-                          </Button>
-                        )}
-                        {r.link_url && (
-                          <Button variant="outline" size="icon" title="Сілтемені ашу" asChild>
-                            <a href={r.link_url} target="_blank" rel="noreferrer">
-                              <ExternalLink className="size-4" />
-                            </a>
-                          </Button>
-                        )}
                         {r.user_id === user?.id && (
                           <Button
                             variant="outline"
@@ -624,19 +797,26 @@ function ReportsPage() {
                 <div className="space-y-2">
                   <p className="text-muted-foreground">Тіркелген материалдар:</p>
                   <div className="flex flex-wrap gap-2">
-                    {viewingReport.file_name && (
-                      <Button variant="outline" size="sm" onClick={() => download(viewingReport)}>
-                        <Paperclip className="size-4" /> {viewingReport.file_name}
-                      </Button>
-                    )}
-                    {viewingReport.link_url && (
-                      <Button variant="outline" size="sm" asChild>
-                        <a href={viewingReport.link_url} target="_blank" rel="noreferrer">
-                          <ExternalLink className="size-4" /> Сілтемені ашу
-                        </a>
-                      </Button>
-                    )}
-                    {!viewingReport.file_name && !viewingReport.link_url && (
+                    {viewingAttachments.length > 0 ? (
+                      viewingAttachments.map((a) =>
+                        a.kind === "file" ? (
+                          <Button
+                            key={a.id}
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openAttachment(a)}
+                          >
+                            <Download className="size-4" /> {a.file_name}
+                          </Button>
+                        ) : (
+                          <Button key={a.id} variant="outline" size="sm" asChild>
+                            <a href={a.link_url ?? "#"} target="_blank" rel="noreferrer">
+                              <ExternalLink className="size-4" /> {a.link_url}
+                            </a>
+                          </Button>
+                        ),
+                      )
+                    ) : (
                       <span className="text-xs text-muted-foreground">—</span>
                     )}
                   </div>
