@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useProfile, useSession } from "@/lib/auth";
-import { renameTeacherLogin } from "@/lib/teacher-accounts.functions";
+import { updateTeacherProfile } from "@/lib/teacher-accounts.functions";
 import { sortClassesByLiter } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/teachers")({
@@ -31,10 +31,11 @@ function TeachersPage() {
   const { user } = useSession();
   const { data: me, isLoading: profileLoading } = useProfile(user);
   const queryClient = useQueryClient();
-  const renameLogin = useServerFn(renameTeacherLogin);
+  const updateProfile = useServerFn(updateTeacherProfile);
 
   const [editing, setEditing] = useState<ProfileRow | null>(null);
   const [newLogin, setNewLogin] = useState("");
+  const [newFullName, setNewFullName] = useState("");
 
   const profilesQuery = useQuery({
     queryKey: ["profiles-teachers"],
@@ -49,18 +50,25 @@ function TeachersPage() {
     },
   });
 
-  const renameMutation = useMutation({
+  const updateMutation = useMutation({
     mutationFn: async () => {
       if (!editing) throw new Error("no_profile");
-      return renameLogin({ data: { profileId: editing.id, newLogin } });
+      return updateProfile({
+        data: { profileId: editing.id, newLogin, fullName: newFullName },
+      });
     },
     onSuccess: (res) => {
-      toast.success(`Логин ауыстырылды: ${res.newLogin} (пароль: ${res.newLogin}82)`);
+      toast.success(
+        res.loginChanged
+          ? `Сақталды. Логин ауыстырылды: ${res.newLogin} (пароль: ${res.newLogin}82)`
+          : "Сақталды",
+      );
       setEditing(null);
       setNewLogin("");
+      setNewFullName("");
       queryClient.invalidateQueries({ queryKey: ["profiles-teachers"] });
     },
-    onError: (err: Error) => toast.error(err.message || "Ауыстыру сәтсіз аяқталды"),
+    onError: (err: Error) => toast.error(err.message || "Сақтау сәтсіз аяқталды"),
   });
 
   if (profileLoading) {
@@ -108,10 +116,11 @@ function TeachersPage() {
                   <Button
                     variant="outline"
                     size="icon"
-                    title="Логинді өзгерту"
+                    title="Өзгерту"
                     onClick={() => {
                       setEditing(p);
                       setNewLogin(p.username);
+                      setNewFullName(p.full_name);
                     }}
                   >
                     <Pencil className="size-4" />
@@ -126,11 +135,20 @@ function TeachersPage() {
       <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>{editing?.full_name} — логинді өзгерту</DialogTitle>
+            <DialogTitle>Мұғалімді өзгерту</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="new-login">Жаңа логин</Label>
+              <Label htmlFor="new-full-name">Аты-жөні</Label>
+              <Input
+                id="new-full-name"
+                value={newFullName}
+                onChange={(e) => setNewFullName(e.target.value)}
+                placeholder="Карагулова Ляззат Итемгенқызы"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-login">Логин</Label>
               <Input
                 id="new-login"
                 value={newLogin}
@@ -138,14 +156,14 @@ function TeachersPage() {
                 placeholder="karagulova"
               />
               <p className="text-xs text-muted-foreground">
-                Тек латын әріптері мен цифрлар. Пароль автоматты{" "}
+                Тек латын әріптері мен цифрлар. Логинді өзгертсең, пароль автоматты{" "}
                 <span className="font-mono">{newLogin || "login"}82</span> болады.
               </p>
             </div>
             <Button
               className="w-full"
-              onClick={() => renameMutation.mutate()}
-              disabled={!newLogin.trim() || renameMutation.isPending}
+              onClick={() => updateMutation.mutate()}
+              disabled={!newLogin.trim() || !newFullName.trim() || updateMutation.isPending}
             >
               Сақтау
             </Button>
