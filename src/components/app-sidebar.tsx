@@ -137,6 +137,11 @@ export function AppSidebar() {
                           <Link to="/class-criteria">Сынып критерийлері</Link>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton asChild isActive={pathname === "/teachers"}>
+                          <Link to="/teachers">Мұғалімдер</Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
                     </SidebarMenuSub>
                   )}
                 </SidebarMenuItem>

@@ -21,6 +21,7 @@ import { Route as AuthenticatedEduqorRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedEventsRouteImport } from './routes/_authenticated/events'
 import { Route as AuthenticatedPasswordRouteImport } from './routes/_authenticated/password'
 import { Route as AuthenticatedRatingRouteImport } from './routes/_authenticated/rating'
+import { Route as AuthenticatedTeachersRouteImport } from './routes/_authenticated/teachers'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AuthenticatedEventsEventIdRouteImport } from './routes/_authenticated/events_.$eventId'
@@ -92,6 +93,11 @@ const AuthenticatedRatingRoute = AuthenticatedRatingRouteImport.update({
   path: '/rating',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedTeachersRoute = AuthenticatedTeachersRouteImport.update({
+  id: '/teachers',
+  path: '/teachers',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
@@ -158,6 +164,7 @@ export interface FileRoutesByFullPath {
   '/password': typeof AuthenticatedPasswordRoute
   '/rating': typeof AuthenticatedRatingRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/teachers': typeof AuthenticatedTeachersRoute
   '/api/chat': typeof ApiChatRoute
   '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/api/public/seed-roster': typeof ApiPublicSeedRosterRoute
@@ -181,6 +188,7 @@ export interface FileRoutesByTo {
   '/password': typeof AuthenticatedPasswordRoute
   '/rating': typeof AuthenticatedRatingRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/teachers': typeof AuthenticatedTeachersRoute
   '/api/chat': typeof ApiChatRoute
   '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/api/public/seed-roster': typeof ApiPublicSeedRosterRoute
@@ -206,6 +214,7 @@ export interface FileRoutesById {
   '/_authenticated/password': typeof AuthenticatedPasswordRoute
   '/_authenticated/rating': typeof AuthenticatedRatingRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
+  '/_authenticated/teachers': typeof AuthenticatedTeachersRoute
   '/api/chat': typeof ApiChatRoute
   '/_authenticated/events_/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/api/public/seed-roster': typeof ApiPublicSeedRosterRoute
@@ -231,6 +240,7 @@ export interface FileRouteTypes {
     | '/password'
     | '/rating'
     | '/reports'
+    | '/teachers'
     | '/api/chat'
     | '/events/$eventId'
     | '/api/public/seed-roster'
@@ -254,6 +264,7 @@ export interface FileRouteTypes {
     | '/password'
     | '/rating'
     | '/reports'
+    | '/teachers'
     | '/api/chat'
     | '/events/$eventId'
     | '/api/public/seed-roster'
@@ -278,6 +289,7 @@ export interface FileRouteTypes {
     | '/_authenticated/password'
     | '/_authenticated/rating'
     | '/_authenticated/reports'
+    | '/_authenticated/teachers'
     | '/api/chat'
     | '/_authenticated/events_/$eventId'
     | '/api/public/seed-roster'
@@ -387,6 +399,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRatingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/teachers': {
+      id: '/_authenticated/teachers'
+      path: '/teachers'
+      fullPath: '/teachers'
+      preLoaderRoute: typeof AuthenticatedTeachersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/reports': {
       id: '/_authenticated/reports'
       path: '/reports'
@@ -471,6 +490,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPasswordRoute: typeof AuthenticatedPasswordRoute
   AuthenticatedRatingRoute: typeof AuthenticatedRatingRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
+  AuthenticatedTeachersRoute: typeof AuthenticatedTeachersRoute
   AuthenticatedEventsEventIdRoute: typeof AuthenticatedEventsEventIdRoute
   AuthenticatedMeetingsRoute: typeof AuthenticatedMeetingsRoute
   AuthenticatedMeetingsMeetingIdRoute: typeof AuthenticatedMeetingsMeetingIdRoute
@@ -487,6 +507,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPasswordRoute: AuthenticatedPasswordRoute,
   AuthenticatedRatingRoute: AuthenticatedRatingRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
+  AuthenticatedTeachersRoute: AuthenticatedTeachersRoute,
   AuthenticatedEventsEventIdRoute: AuthenticatedEventsEventIdRoute,
   AuthenticatedMeetingsRoute: AuthenticatedMeetingsRoute,
   AuthenticatedMeetingsMeetingIdRoute: AuthenticatedMeetingsMeetingIdRoute,
