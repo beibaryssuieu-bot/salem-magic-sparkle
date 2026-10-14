@@ -30,6 +30,7 @@ import { Route as AuthenticatedMeetingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedMeetingsMeetingIdRouteImport } from './routes/_authenticated/meetings_.$meetingId'
 import { Route as ApiPublicSyncRosterRouteImport } from './routes/api/public/sync-roster'
 import { Route as ApiPublicResetTestDataRouteImport } from './routes/api/public/reset-test-data'
+import { Route as ApiPublicRenameLoginsRouteImport } from './routes/api/public/rename-logins'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -138,6 +139,11 @@ const ApiPublicResetTestDataRoute = ApiPublicResetTestDataRouteImport.update({
   path: '/api/public/reset-test-data',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicRenameLoginsRoute = ApiPublicRenameLoginsRouteImport.update({
+  id: '/api/public/rename-logins',
+  path: '/api/public/rename-logins',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -160,6 +166,7 @@ export interface FileRoutesByFullPath {
   '/meetings/$meetingId': typeof AuthenticatedMeetingsMeetingIdRoute
   '/api/public/sync-roster': typeof ApiPublicSyncRosterRoute
   '/api/public/reset-test-data': typeof ApiPublicResetTestDataRoute
+  '/api/public/rename-logins': typeof ApiPublicRenameLoginsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -182,6 +189,7 @@ export interface FileRoutesByTo {
   '/meetings/$meetingId': typeof AuthenticatedMeetingsMeetingIdRoute
   '/api/public/sync-roster': typeof ApiPublicSyncRosterRoute
   '/api/public/reset-test-data': typeof ApiPublicResetTestDataRoute
+  '/api/public/rename-logins': typeof ApiPublicRenameLoginsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -206,6 +214,7 @@ export interface FileRoutesById {
   '/_authenticated/meetings_/$meetingId': typeof AuthenticatedMeetingsMeetingIdRoute
   '/api/public/sync-roster': typeof ApiPublicSyncRosterRoute
   '/api/public/reset-test-data': typeof ApiPublicResetTestDataRoute
+  '/api/public/rename-logins': typeof ApiPublicRenameLoginsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -230,6 +239,7 @@ export interface FileRouteTypes {
     | '/meetings/$meetingId'
     | '/api/public/sync-roster'
     | '/api/public/reset-test-data'
+    | '/api/public/rename-logins'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -252,6 +262,7 @@ export interface FileRouteTypes {
     | '/meetings/$meetingId'
     | '/api/public/sync-roster'
     | '/api/public/reset-test-data'
+    | '/api/public/rename-logins'
   id:
     | '__root__'
     | '/'
@@ -275,6 +286,7 @@ export interface FileRouteTypes {
     | '/_authenticated/meetings_/$meetingId'
     | '/api/public/sync-roster'
     | '/api/public/reset-test-data'
+    | '/api/public/rename-logins'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -286,6 +298,7 @@ export interface RootRouteChildren {
   QrTokenRoute: typeof QrTokenRoute
   ApiPublicSyncRosterRoute: typeof ApiPublicSyncRosterRoute
   ApiPublicResetTestDataRoute: typeof ApiPublicResetTestDataRoute
+  ApiPublicRenameLoginsRoute: typeof ApiPublicRenameLoginsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -437,6 +450,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicResetTestDataRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/rename-logins': {
+      id: '/api/public/rename-logins'
+      path: '/api/public/rename-logins'
+      fullPath: '/api/public/rename-logins'
+      preLoaderRoute: typeof ApiPublicRenameLoginsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -484,6 +504,7 @@ const rootRouteChildren: RootRouteChildren = {
   QrTokenRoute: QrTokenRoute,
   ApiPublicSyncRosterRoute: ApiPublicSyncRosterRoute,
   ApiPublicResetTestDataRoute: ApiPublicResetTestDataRoute,
+  ApiPublicRenameLoginsRoute: ApiPublicRenameLoginsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

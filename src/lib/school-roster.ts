@@ -103,7 +103,7 @@ export const SCHOOL_ROSTER: RosterEntry[] = [
   { className: "8Ж", fullName: "Кулданова Ақжарқын Ныгметовна", login: "kuldanova" },
   { className: "8З", fullName: "Нурбулатова Лаура Тимуровна", login: "nurbulatova" },
 
-  { className: "9А", fullName: "Тоймаганбетова Эльмира Бимаганбетовна", login: "toimagambetova" },
+  { className: "9А", fullName: "Тоймаганбетова Эльмира Бимаганбетовна", login: "toimaganbetova" },
   { className: "9Ә", fullName: "Токсанбаева Алтынгуль Ажимбаевна", login: "toksambaeva" },
   { className: "9Б", fullName: "Мұқанбетқазы Гүлсән Қонысбайқызы", login: "mukanbetkazy" },
   { className: "9В", fullName: "Боранбай Айдана Еркінқызы", login: "boranbay" },
@@ -119,7 +119,7 @@ export const SCHOOL_ROSTER: RosterEntry[] = [
   { className: "10Б", fullName: "Умирзаков Бақытбек Бауыржанұлы", login: "umirzakov" },
   { className: "10В", fullName: "Мухтарова Камшат Мухтаровна", login: "mukhtarova" },
 
-  { className: "11А", fullName: "Толеуханова Гүлбақыт Турлановна", login: "toleukhanova" },
+  { className: "11А", fullName: "Толеуканова Гулбакыт Турлановна", login: "toleukanova" },
   { className: "11Ә", fullName: "Сейтенова Базаргул Губайдулловна", login: "seitenova" },
   { className: "11Б", fullName: "Бисенбай Ақмарал Жексенбайқызы", login: "bisenbai" },
   { className: "11В", fullName: "Нурмагамбетова Кенжекей Маулетовна", login: "nurmagambetova" },
