@@ -3,14 +3,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Pencil } from "lucide-react";
+import { KeyRound, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useProfile, useSession } from "@/lib/auth";
-import { updateTeacherProfile } from "@/lib/teacher-accounts.functions";
+import { resetTeacherPassword, updateTeacherProfile } from "@/lib/teacher-accounts.functions";
 import { sortClassesByLiter } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/teachers")({
@@ -32,6 +32,7 @@ function TeachersPage() {
   const { data: me, isLoading: profileLoading } = useProfile(user);
   const queryClient = useQueryClient();
   const updateProfile = useServerFn(updateTeacherProfile);
+  const resetPassword = useServerFn(resetTeacherPassword);
 
   const [editing, setEditing] = useState<ProfileRow | null>(null);
   const [newLogin, setNewLogin] = useState("");
@@ -69,6 +70,14 @@ function TeachersPage() {
       queryClient.invalidateQueries({ queryKey: ["profiles-teachers"] });
     },
     onError: (err: Error) => toast.error(err.message || "Сақтау сәтсіз аяқталды"),
+  });
+
+  const resetPasswordMutation = useMutation({
+    mutationFn: (profileId: string) => resetPassword({ data: { profileId } }),
+    onSuccess: (res) => {
+      toast.success(`Пароль қалпына келтірілді: ${res.login}82`);
+    },
+    onError: (err: Error) => toast.error(err.message || "Қалпына келтіру сәтсіз аяқталды"),
   });
 
   if (profileLoading) {
@@ -113,18 +122,37 @@ function TeachersPage() {
                 <td className="p-4">{p.full_name}</td>
                 <td className="p-4 font-mono">{p.username}</td>
                 <td className="p-4 text-right">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    title="Өзгерту"
-                    onClick={() => {
-                      setEditing(p);
-                      setNewLogin(p.username);
-                      setNewFullName(p.full_name);
-                    }}
-                  >
-                    <Pencil className="size-4" />
-                  </Button>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      title="Парольді қалпына келтіру"
+                      onClick={() => {
+                        if (
+                          confirm(
+                            `${p.full_name} үшін парольді "${p.username}82" етіп қалпына келтіру керек пе?`,
+                          )
+                        ) {
+                          resetPasswordMutation.mutate(p.id);
+                        }
+                      }}
+                      disabled={resetPasswordMutation.isPending}
+                    >
+                      <KeyRound className="size-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      title="Өзгерту"
+                      onClick={() => {
+                        setEditing(p);
+                        setNewLogin(p.username);
+                        setNewFullName(p.full_name);
+                      }}
+                    >
+                      <Pencil className="size-4" />
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ))}

@@ -77,3 +77,35 @@ export const updateTeacherProfile = createServerFn({ method: "POST" })
 
     return { ok: true, newLogin: data.newLogin, loginChanged };
   });
+
+/**
+ * Мұғалімнің паролін логинін өзгертпей-ақ login+82 форматына қайта
+ * орнату — тек әкімшіге. Логин ұмытылмаған, тек пароль ұмытылған
+ * жағдайға арналған.
+ */
+export const resetTeacherPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { profileId: string }) => {
+    if (!input.profileId) throw new Error("Invalid profileId");
+    return { profileId: input.profileId };
+  })
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context.supabase, context.userId);
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: current, error: currentError } = await supabaseAdmin
+      .from("profiles")
+      .select("username")
+      .eq("id", data.profileId)
+      .maybeSingle();
+    if (currentError) throw new Error(currentError.message);
+    if (!current) throw new Error("Профиль табылмады");
+
+    const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(data.profileId, {
+      password: `${current.username}82`,
+    });
+    if (authError) throw new Error(authError.message);
+
+    return { ok: true, login: current.username };
+  });
