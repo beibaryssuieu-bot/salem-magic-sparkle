@@ -2,9 +2,10 @@ import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { CalendarDays, Plus, Trash2 } from "lucide-react";
+import { CalendarDays, Pencil, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -47,6 +48,11 @@ function EventsPage() {
   const [date, setDate] = useState("");
   const [description, setDescription] = useState("");
 
+  const [editingEvent, setEditingEvent] = useState<EventRow | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDate, setEditDate] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+
   const eventsQuery = useQuery({
     queryKey: ["events"],
     queryFn: async () => {
@@ -79,6 +85,28 @@ function EventsPage() {
     onError: () => toast.error("Қосу мүмкін болмады"),
   });
 
+  const updateMutation = useMutation({
+    mutationFn: async () => {
+      if (!editingEvent) return;
+      if (!editTitle.trim() || !editDate) throw new Error("empty");
+      const { error } = await supabase
+        .from("events")
+        .update({
+          title: editTitle.trim(),
+          event_date: editDate,
+          description: editDescription.trim() || null,
+        })
+        .eq("id", editingEvent.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Сақталды");
+      setEditingEvent(null);
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+    },
+    onError: () => toast.error("Сақтау сәтсіз аяқталды"),
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("events").delete().eq("id", id);
@@ -90,6 +118,13 @@ function EventsPage() {
     },
     onError: () => toast.error("Жою мүмкін болмады"),
   });
+
+  function startEdit(e: EventRow) {
+    setEditingEvent(e);
+    setEditTitle(e.title);
+    setEditDate(e.event_date);
+    setEditDescription(e.description ?? "");
+  }
 
   const today = new Date().toISOString().slice(0, 10);
   const rows = eventsQuery.data ?? [];
@@ -133,13 +168,18 @@ function EventsPage() {
                         </Link>
                       </Button>
                       {me?.isAdmin && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => deleteMutation.mutate(e.id)}
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
+                        <>
+                          <Button variant="ghost" size="icon" onClick={() => startEdit(e)}>
+                            <Pencil className="size-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => deleteMutation.mutate(e.id)}
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </>
                       )}
                     </div>
                   </li>
@@ -167,13 +207,18 @@ function EventsPage() {
                         Ашу
                       </Link>
                       {me?.isAdmin && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => deleteMutation.mutate(e.id)}
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
+                        <>
+                          <Button variant="ghost" size="icon" onClick={() => startEdit(e)}>
+                            <Pencil className="size-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => deleteMutation.mutate(e.id)}
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </>
                       )}
                     </span>
                   </li>
@@ -225,6 +270,50 @@ function EventsPage() {
           </aside>
         )}
       </div>
+
+      <Dialog open={!!editingEvent} onOpenChange={(open) => !open && setEditingEvent(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Іс-шараны өзгерту</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="ev-edit-title">Атауы</Label>
+              <Input
+                id="ev-edit-title"
+                value={editTitle}
+                maxLength={120}
+                onChange={(e) => setEditTitle(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ev-edit-date">Күні</Label>
+              <Input
+                id="ev-edit-date"
+                type="date"
+                value={editDate}
+                onChange={(e) => setEditDate(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ev-edit-desc">Сипаттама</Label>
+              <Textarea
+                id="ev-edit-desc"
+                value={editDescription}
+                maxLength={500}
+                onChange={(e) => setEditDescription(e.target.value)}
+              />
+            </div>
+            <Button
+              className="w-full"
+              onClick={() => updateMutation.mutate()}
+              disabled={!editTitle.trim() || !editDate || updateMutation.isPending}
+            >
+              Сақтау
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
